@@ -15,7 +15,7 @@ First off, thank you for considering contributing to PRISM! It's people like you
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by the [PRISM Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to [conduct@prism.io](mailto:conduct@prism.io).
+This project and everyone participating in it is governed by the [PRISM Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.
 
 ## Getting Started
 

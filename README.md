@@ -48,7 +48,7 @@ PRISM is an enterprise-grade, AI-powered product management platform that revolu
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/prism-core.git
+git clone https://github.com/nilukush/prism-core.git
 cd prism-core
 ```
 
@@ -81,12 +81,15 @@ npm run dev
 - **Backend API**: http://localhost:8100
 - **API Documentation**: http://localhost:8100/docs
 
-### Default Credentials
+### Default Test Account
 
+For development purposes, a test account is created:
 ```
-Email: nilukush@gmail.com
-Password: Test123!@#
+Email: admin@example.com
+Password: Admin123!@#
 ```
+
+**Note**: Change these credentials immediately in production.
 
 ## 📚 Documentation
 
@@ -178,18 +181,18 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 - Built with [FastAPI](https://fastapi.tiangolo.com/)
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
-- AI powered by [Anthropic Claude](https://www.anthropic.com/)
+- AI powered by [Anthropic Claude](https://www.anthropic.com/) and [OpenAI](https://openai.com/)
 - Inspired by modern product management best practices
 
 ## 📞 Support
 
-- 📧 Email: support@prism-ai.dev
-- 💬 Discord: [Join our community](https://discord.gg/prism)
-- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/prism-core/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/nilukush/prism-core/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/nilukush/prism-core/discussions)
+- 📚 Wiki: [Documentation Wiki](https://github.com/nilukush/prism-core/wiki)
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/prism-core&type=Date)](https://star-history.com/#yourusername/prism-core&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=nilukush/prism-core&type=Date)](https://star-history.com/#nilukush/prism-core&Date)
 
 ---
 

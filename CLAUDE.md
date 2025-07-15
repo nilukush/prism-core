@@ -25,9 +25,9 @@ Frontend: http://localhost:3100
 Backend: http://localhost:8100
 API Docs: http://localhost:8100/docs
 
-# Login credentials
-Email: nilukush@gmail.com
-Password: Test123!@#
+# Login credentials (development)
+Email: admin@example.com
+Password: Admin123!@#
 
 # Your code changes auto-reload - no rebuilds needed!
 
