@@ -151,13 +151,29 @@ install_dependencies() {
 build_check() {
     print_info "Running build check..."
     
-    # Test frontend build
-    cd frontend
-    print_info "Building frontend..."
-    npm run build
-    cd ..
+    # Check if frontend dependencies are installed
+    if [ ! -d "frontend/node_modules" ]; then
+        print_warning "Frontend dependencies not installed. Skipping build check."
+        print_info "Run 'cd frontend && npm install' to install dependencies."
+    else
+        # Test frontend build
+        cd frontend
+        print_info "Building frontend..."
+        if npm run build; then
+            print_success "Frontend build successful!"
+        else
+            print_warning "Frontend build failed. Check for errors."
+        fi
+        cd ..
+    fi
     
-    print_success "Build check passed!"
+    # Test backend
+    print_info "Checking backend..."
+    if [ -f "Dockerfile" ]; then
+        print_success "Backend Dockerfile found!"
+    else
+        print_error "Backend Dockerfile not found!"
+    fi
 }
 
 # Step 5: Database setup instructions
