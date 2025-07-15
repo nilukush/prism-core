@@ -322,7 +322,7 @@ jobs:
           category: checkov
 
       - name: tfsec scan
-        uses: aquasecurity/tfsec-action@v1.0.0
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
           soft_fail: false
           format: sarif
