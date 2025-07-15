@@ -245,7 +245,7 @@ embeddings_cache/
 uploads/
 exports/
 sessions/
-static/collected/.env.production
+static/collected/
 
 # Test scripts
 test_*.py
@@ -254,3 +254,9 @@ test_*.js
 
 # Patch files
 *.patch
+
+# Deployment files with sensitive data
+.env.production
+frontend/.env.production
+DEPLOYMENT_CHECKLIST.txt
+DEPLOYMENT_URLS.txt
