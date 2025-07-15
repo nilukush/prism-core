@@ -27,7 +27,7 @@ echo "╚═══════════════════════�
 echo -e "${NC}"
 
 # Check if we're in the right directory
-if [ ! -f "package.json" ] || [ ! -d "backend" ] || [ ! -d "frontend" ]; then
+if [ ! -d "backend" ] || [ ! -d "frontend" ] || [ ! -f "docker-compose.yml" ]; then
     print_error "Please run this script from the PRISM root directory"
     exit 1
 fi
@@ -129,15 +129,22 @@ check_prerequisites() {
 install_dependencies() {
     print_info "Installing dependencies..."
     
-    # Install root dependencies
-    npm install
-    
     # Install frontend dependencies
     cd frontend
-    npm install
+    if [ ! -d "node_modules" ]; then
+        print_info "Installing frontend dependencies..."
+        npm install
+    else
+        print_info "Frontend dependencies already installed"
+    fi
     cd ..
     
-    print_success "Dependencies installed!"
+    # Check Python dependencies
+    if command -v python3 &> /dev/null; then
+        print_info "Python dependencies should be installed in Docker container"
+    fi
+    
+    print_success "Dependencies checked!"
 }
 
 # Step 4: Build check
