@@ -246,3 +246,11 @@ uploads/
 exports/
 sessions/
 static/collected/.env.production
+
+# Test scripts
+test_*.py
+test_*.sh
+test_*.js
+
+# Patch files
+*.patch

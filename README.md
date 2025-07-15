@@ -90,7 +90,7 @@ Password: Test123!@#
 
 ## 📚 Documentation
 
-- [Quick Start Guide](./CLAUDE.md) - Comprehensive setup and troubleshooting
+- [Setup Guide](./SETUP_GUIDE.md) - Quick start and installation instructions
 - [Architecture Overview](./ARCHITECTURE.md) - System design and components
 - [API Documentation](http://localhost:8100/docs) - Interactive API explorer
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute to PRISM
