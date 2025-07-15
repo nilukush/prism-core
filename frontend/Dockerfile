@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Stage 1: Dependencies
-FROM node:18.17-alpine AS deps
+FROM node:24.4-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -14,7 +14,7 @@ RUN npm ci --only=production && \
     (npm install --production && npm cache clean --force)
 
 # Stage 2: Builder
-FROM node:18.17-alpine AS builder
+FROM node:24.4-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
@@ -46,7 +46,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # Stage 3: Runner
-FROM node:18.17-alpine AS runner
+FROM node:24.4-alpine AS runner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
