@@ -1,408 +1,196 @@
-<div align="center">
-  <h1>
-    <img src="docs/assets/logo.svg" alt="PRISM Logo" width="120" height="120">
-    <br>
-    PRISM
-  </h1>
-  <p><strong>Open Source AI Agent Platform</strong></p>
-  <p>Build, deploy, and manage intelligent AI agents at scale with enterprise-grade reliability</p>
-  
-  <p>
-    <a href="https://github.com/prism/prism-core/actions/workflows/ci.yml">
-      <img src="https://github.com/prism/prism-core/actions/workflows/ci.yml/badge.svg" alt="CI Status">
-    </a>
-    <a href="https://codecov.io/gh/prism/prism-core">
-      <img src="https://codecov.io/gh/prism/prism-core/branch/main/graph/badge.svg" alt="Code Coverage">
-    </a>
-    <a href="https://github.com/prism/prism-core/blob/main/LICENSE">
-      <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License">
-    </a>
-    <a href="https://github.com/prism/prism-core/releases">
-      <img src="https://img.shields.io/github/v/release/prism/prism-core" alt="Latest Release">
-    </a>
-    <a href="https://prism.io/discord">
-      <img src="https://img.shields.io/discord/123456789?label=Discord&logo=discord" alt="Discord">
-    </a>
-  </p>
-  
-  <p>
-    <a href="https://prism.io/docs">Documentation</a> •
-    <a href="https://prism.io/demo">Live Demo</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#features">Features</a> •
-    <a href="#contributing">Contributing</a>
-  </p>
-</div>
+# PRISM - AI-Powered Product Management Platform
 
----
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-009688)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 
-## 🎯 What is PRISM?
+## 🚀 Overview
 
-PRISM is a comprehensive, enterprise-grade platform for building, deploying, and managing AI agents. It provides a robust infrastructure for creating intelligent agents that can collaborate, learn, and adapt to complex tasks while maintaining security, scalability, and reliability.
+PRISM is an enterprise-grade, AI-powered product management platform that revolutionizes how teams build products. By leveraging advanced AI capabilities, PRISM automates routine PM tasks, provides intelligent insights, and accelerates the product development lifecycle.
 
-### Key Highlights
+### Key Features
 
-- **🤖 Multi-Agent Orchestration**: Coordinate multiple AI agents working together on complex tasks
-- **🔌 Extensible Architecture**: Build custom tools, integrations, and capabilities
-- **☁️ Cloud-Native**: Deploy on Kubernetes with automatic scaling and high availability
-- **🔒 Enterprise Security**: Role-based access control, audit logs, and compliance features
-- **⚡ Real-Time Execution**: Stream agent responses with WebSocket support
-- **📊 Comprehensive Analytics**: Monitor performance, costs, and agent behavior
-
-## 📋 Table of Contents
-
-- [Features](#features)
-- [Architecture](#architecture)
-- [Quick Start](#quick-start)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Development](#development)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [Security](#security)
-- [Support](#support)
-- [License](#license)
-
-## ✨ Features
-
-### Core Capabilities
-
-- **Agent Types**
-  - Conversational agents for interactive dialogue
-  - Task agents for specific job execution
-  - Reactive agents responding to events
-  - Proactive agents for autonomous operations
-  - Collaborative agents working in teams
-
-- **Memory Systems**
-  - Short-term buffer memory
-  - Long-term vector storage
-  - Conversation summarization
-  - Knowledge graph integration
-
-- **Tool Integration**
-  - RESTful API connections
-  - Database queries
-  - File system operations
-  - Custom tool development
-
-### Enterprise Features
-
-- **Security & Compliance**
-  - JWT-based authentication
-  - OAuth 2.0 / OIDC support
-  - Fine-grained RBAC
-  - Audit logging
-  - Data encryption at rest and in transit
-
-- **Scalability**
-  - Horizontal auto-scaling
-  - Load balancing
-  - Multi-region deployment
-  - Connection pooling
-  - Caching strategies
-
-- **Observability**
-  - Prometheus metrics
-  - Distributed tracing
-  - Centralized logging
-  - Real-time dashboards
-  - Alerting and notifications
+- **🤖 AI-Powered PRD Generation**: Generate comprehensive Product Requirements Documents using Claude 3 Sonnet
+- **📝 Intelligent User Story Creation**: Convert requirements into detailed user stories with acceptance criteria
+- **📊 Sprint Planning & Analytics**: AI-driven sprint estimation and velocity analysis
+- **🔄 Real-time Collaboration**: Team workspaces with role-based access control
+- **🔐 Enterprise Security**: JWT authentication, session persistence, and audit logging
+- **🎯 Multi-Provider AI Support**: OpenAI, Anthropic, and local models via Ollama
+- **📈 Predictive Analytics**: Forecast sprint completion and identify bottlenecks
 
 ## 🏗️ Architecture
 
-PRISM follows a microservices architecture with clear separation of concerns:
-
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Frontend      │     │   API Gateway   │     │   Auth Service  │
-│   (Next.js)     │────▶│    (FastAPI)    │────▶│     (JWT)       │
+│   Next.js 14    │────▶│   FastAPI       │────▶│  PostgreSQL     │
+│   Frontend      │     │   Backend       │     │   Database      │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Agent Engine      │
-                    │  (Orchestration)    │
-                    └─────────────────────┘
-                               │
-                    ┌──────────┴──────────┐
-                    ▼                     ▼
-            ┌───────────────┐     ┌───────────────┐
-            │  PostgreSQL   │     │    Redis      │
-            │  (Metadata)   │     │   (Cache)     │
-            └───────────────┘     └───────────────┘
-                    │
-                    ▼
-            ┌───────────────┐
-            │    Qdrant     │
-            │ (Vector Store)│
-            └───────────────┘
+                               │                          │
+                               ├──────────────────────────┤
+                               ▼                          ▼
+                        ┌─────────────┐           ┌─────────────┐
+                        │    Redis    │           │   Qdrant    │
+                        │    Cache    │           │ Vector Store│
+                        └─────────────┘           └─────────────┘
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker 20.10+
-- Docker Compose 2.0+
+- Docker and Docker Compose
 - Node.js 18+ (for frontend development)
 - Python 3.11+ (for backend development)
+- 4GB+ RAM recommended
 
-### One-Command Setup
+### 1. Clone the Repository
 
 ```bash
-# Clone the repository
-git clone https://github.com/prism/prism-core.git
+git clone https://github.com/yourusername/prism-core.git
 cd prism-core
-
-# Run the setup script
-./scripts/setup-dev.sh
-
-# Start the development environment
-./scripts/dev.sh up
 ```
 
-The platform will be available at:
-- Frontend: http://localhost:3000
-- API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-## 📦 Installation
-
-### Using Docker (Recommended)
+### 2. Configure Environment
 
 ```bash
-# Production deployment
-docker pull prism/prism:latest
+# Copy environment templates
+cp .env.example .env
+cp frontend/.env.example frontend/.env.local
 
-# Run with docker-compose
-wget https://raw.githubusercontent.com/prism/prism-core/main/docker-compose.prod.yml
-docker-compose -f docker-compose.prod.yml up -d
+# Configure AI provider (optional - uses mock by default)
+./configure_ai.sh
 ```
 
-### Using Kubernetes
+### 3. Start the Application
 
 ```bash
-# Add the PRISM Helm repository
-helm repo add prism https://charts.prism.io
-helm repo update
+# Build and start all services
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
-# Install PRISM
-helm install prism prism/prism \
-  --namespace prism \
-  --create-namespace \
-  --values values.yaml
-```
-
-### From Source
-
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: .\venv\Scripts\activate
-pip install -r requirements.txt
-alembic upgrade head
-
-# Frontend
+# Start frontend development server
 cd frontend
 npm install
-npm run build
+npm run dev
 ```
 
-## 💻 Usage
+### 4. Access the Application
 
-### Creating Your First Agent
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8100
+- **API Documentation**: http://localhost:8100/docs
 
-```python
-from prism import Agent, Tool, Memory
-
-# Define a custom tool
-class WeatherTool(Tool):
-    async def execute(self, city: str) -> str:
-        # Your weather API integration
-        return f"Weather in {city}: Sunny, 72°F"
-
-# Create an agent
-agent = Agent(
-    name="Weather Assistant",
-    description="Helps with weather information",
-    tools=[WeatherTool()],
-    memory=Memory(type="buffer", max_messages=100),
-    model="gpt-4",
-    temperature=0.7
-)
-
-# Execute the agent
-response = await agent.execute(
-    "What's the weather like in San Francisco?"
-)
-print(response)
-```
-
-### REST API Example
-
-```bash
-# Create a workspace
-curl -X POST http://localhost:8000/api/v1/workspaces \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Workspace",
-    "description": "Development workspace"
-  }'
-
-# Create an agent
-curl -X POST http://localhost:8000/api/v1/workspaces/$WORKSPACE_ID/agents \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Support Bot",
-    "type": "conversational",
-    "config": {
-      "model": "gpt-4",
-      "temperature": 0.7
-    }
-  }'
-```
-
-## 📚 API Documentation
-
-Comprehensive API documentation is available at:
-- **Local Development**: http://localhost:8000/docs
-- **Production**: https://api.prism.io/docs
-
-Key endpoints:
-- `/api/v1/auth/*` - Authentication
-- `/api/v1/workspaces/*` - Workspace management
-- `/api/v1/agents/*` - Agent operations
-- `/api/v1/executions/*` - Execution history
-- `/graphql` - GraphQL endpoint
-
-## 🛠️ Development
-
-### Setting Up Development Environment
-
-```bash
-# Install development dependencies
-make install-dev
-
-# Run tests
-make test
-
-# Run linters
-make lint
-
-# Start development servers
-make dev
-```
-
-### Project Structure
+### Default Credentials
 
 ```
-prism-core/
-├── backend/              # Python backend (FastAPI)
-│   ├── src/             # Source code
-│   ├── tests/           # Test files
-│   └── alembic/         # Database migrations
-├── frontend/            # Next.js frontend
-│   ├── src/            # Source code
-│   └── public/         # Static assets
-├── k8s/                # Kubernetes manifests
-├── helm/               # Helm charts
-├── scripts/            # Utility scripts
-└── docs/               # Documentation
+Email: nilukush@gmail.com
+Password: Test123!@#
 ```
 
-## 🧪 Testing
+## 📚 Documentation
 
-```bash
-# Run all tests
-make test
+- [Quick Start Guide](./CLAUDE.md) - Comprehensive setup and troubleshooting
+- [Architecture Overview](./ARCHITECTURE.md) - System design and components
+- [API Documentation](http://localhost:8100/docs) - Interactive API explorer
+- [Contributing Guide](./CONTRIBUTING.md) - How to contribute to PRISM
 
-# Run backend tests
-cd backend && pytest
+## 🛠️ Technology Stack
 
-# Run frontend tests
-cd frontend && npm test
+### Backend
+- **Framework**: FastAPI with async/await
+- **Database**: PostgreSQL 16 with SQLAlchemy
+- **Cache**: Redis 7 for sessions and rate limiting
+- **AI Integration**: Multi-provider support (OpenAI, Anthropic, Ollama)
+- **Task Queue**: Celery with Redis broker
+- **Security**: JWT auth, rate limiting, DDoS protection
 
-# Run E2E tests
-make test-e2e
+### Frontend
+- **Framework**: Next.js 14 with App Router
+- **UI Library**: shadcn/ui with Tailwind CSS
+- **State Management**: React Context + Hooks
+- **Authentication**: NextAuth.js
+- **Forms**: React Hook Form with Zod validation
 
-# Performance tests
-cd backend && locust -f tests/performance/locustfile.py
-```
+### Infrastructure
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Kubernetes-ready with Helm charts
+- **CI/CD**: GitHub Actions with security scanning
+- **Monitoring**: Prometheus metrics + OpenTelemetry
 
-## 🚢 Deployment
+## 🔒 Security Features
 
-### Production Deployment
-
-See our [Deployment Guide](docs/deployment/README.md) for detailed instructions on:
-- Kubernetes deployment
-- AWS/GCP/Azure deployment
-- On-premise installation
-- High availability setup
-- Backup and disaster recovery
-
-### Environment Variables
-
-Key configuration options:
-
-```env
-# Database
-DATABASE_URL=postgresql://user:pass@localhost/prism
-
-# Redis
-REDIS_URL=redis://localhost:6379
-
-# Authentication
-JWT_SECRET=your-secret-key
-JWT_ALGORITHM=HS256
-
-# AI Models
-OPENAI_API_KEY=your-api-key
-ANTHROPIC_API_KEY=your-api-key
-```
+- **Authentication**: JWT tokens with refresh rotation
+- **Session Management**: Redis-backed persistent sessions
+- **Rate Limiting**: Token bucket algorithm per endpoint
+- **DDoS Protection**: 6-layer defense system
+- **Input Validation**: Comprehensive sanitization
+- **Audit Logging**: Complete activity tracking
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
-- Code of conduct
-- Development workflow
-- Submitting pull requests
-- Reporting issues
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
 
-## 🔒 Security
+### Development Setup
 
-Security is a top priority. Please see our [Security Policy](SECURITY.md) for:
-- Reporting vulnerabilities
-- Security best practices
-- Compliance information
+```bash
+# Backend development
+cd backend
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
+pip install -r requirements.txt
+uvicorn src.main:app --reload
 
-## 💬 Support
+# Frontend development
+cd frontend
+npm install
+npm run dev
+```
 
-- **Documentation**: [https://prism.io/docs](https://prism.io/docs)
-- **Discord Community**: [https://prism.io/discord](https://prism.io/discord)
-- **GitHub Issues**: [Create an issue](https://github.com/prism/prism-core/issues)
-- **Enterprise Support**: [contact@prism.io](mailto:contact@prism.io)
+### Running Tests
+
+```bash
+# Backend tests
+cd backend
+pytest
+
+# Frontend tests
+cd frontend
+npm test
+npm run test:e2e
+```
+
+## 📊 Project Status
+
+- ✅ Core product management features
+- ✅ AI integration (PRD, user stories)
+- ✅ Authentication & authorization
+- ✅ Real-time collaboration
+- 🚧 Advanced analytics dashboard
+- 🚧 Mobile application
+- 📋 Plugin marketplace
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-Special thanks to all our contributors and the open source community!
+- Built with [FastAPI](https://fastapi.tiangolo.com/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- AI powered by [Anthropic Claude](https://www.anthropic.com/)
+- Inspired by modern product management best practices
 
-## 📄 License
+## 📞 Support
 
-PRISM is licensed under the [Apache License 2.0](LICENSE). See the LICENSE file for details.
+- 📧 Email: support@prism-ai.dev
+- 💬 Discord: [Join our community](https://discord.gg/prism)
+- 🐛 Issues: [GitHub Issues](https://github.com/yourusername/prism-core/issues)
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/prism-core&type=Date)](https://star-history.com/#yourusername/prism-core&Date)
 
 ---
 
-<div align="center">
-  <p>Built with ❤️ by the PRISM Team</p>
-  <p>
-    <a href="https://prism.io">Website</a> •
-    <a href="https://github.com/prism/prism-core">GitHub</a> •
-    <a href="https://twitter.com/prism_ai">Twitter</a>
-  </p>
-</div>
+<p align="center">Made with ❤️ by the PRISM Team</p>
