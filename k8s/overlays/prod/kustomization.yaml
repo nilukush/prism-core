@@ -1,0 +1,148 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: prism
+
+commonLabels:
+  environment: production
+  app.kubernetes.io/version: stable
+
+resources:
+  - ../../base
+  - secrets.yaml
+  - postgres-prod.yaml
+  - redis-prod.yaml
+  - qdrant-prod.yaml
+  - monitoring.yaml
+  - backup-job.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENVIRONMENT
+          value: production
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: LOG_LEVEL
+          value: WARNING
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: prism-secrets
+              key: sentry-dsn
+      - op: add
+        path: /spec/template/spec/topologySpreadConstraints
+        value:
+          - maxSkew: 1
+            topologyKey: topology.kubernetes.io/zone
+            whenUnsatisfiable: DoNotSchedule
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: prism-api
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+      - op: add
+        path: /spec/behavior
+        value:
+          scaleUp:
+            policies:
+            - type: Percent
+              value: 50
+              periodSeconds: 60
+            - type: Pods
+              value: 2
+              periodSeconds: 60
+            selectPolicy: Max
+          scaleDown:
+            policies:
+            - type: Percent
+              value: 10
+              periodSeconds: 300
+            - type: Pods
+              value: 1
+              periodSeconds: 300
+            selectPolicy: Min
+            stabilizationWindowSeconds: 300
+
+  - target:
+      kind: Ingress
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.prism.io
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: api.prism.io
+      - op: add
+        path: /metadata/annotations/nginx.ingress.kubernetes.io~1rate-limit
+        value: "200"
+      - op: add
+        path: /metadata/annotations/nginx.ingress.kubernetes.io~1whitelist-source-range
+        value: "0.0.0.0/0"  # Update with actual IP whitelist
+
+  # Enable canary with 0% traffic initially
+  - target:
+      kind: Ingress
+      name: prism-api-canary
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: api.prism.io
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: api.prism.io
+
+  # Production resources
+  - target:
+      kind: Deployment
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 1Gi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 2000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 2Gi
+
+images:
+  - name: prism/prism-api
+    newTag: v1.0.0  # Use semantic versioning in prod
+
+configMapGenerator:
+  - name: prism-config
+    behavior: merge
+    literals:
+      - ENVIRONMENT=production
+      - LOG_FORMAT=json
+      - CORS_ALLOWED_ORIGINS=https://prism.io,https://app.prism.io
+      - ENABLE_METRICS=true
+      - ENABLE_TRACING=true
+      - ENABLE_PROFILING=false

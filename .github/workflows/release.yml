@@ -1,0 +1,304 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  # Validate release version
+  validate-version:
+    name: Validate Release Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      previous_version: ${{ steps.version.outputs.previous_version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate and extract version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          # Validate semantic version
+          if ! [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Version $VERSION does not match semantic versioning pattern"
+            exit 1
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Get previous version
+          PREVIOUS_VERSION=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "v0.0.0")
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+
+  # Generate changelog
+  changelog:
+    name: Generate Changelog
+    runs-on: ubuntu-latest
+    needs: [validate-version]
+    outputs:
+      changelog: ${{ steps.changelog.outputs.changelog }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v4
+        with:
+          fromTag: ${{ needs.validate-version.outputs.previous_version }}
+          toTag: ${{ needs.validate-version.outputs.version }}
+          configuration: |
+            {
+              "template": "## What's Changed\n#{{CHANGELOG}}\n\n**Full Changelog**: #{{RELEASE_DIFF}}",
+              "categories": [
+                {
+                  "title": "## 🚀 Features",
+                  "labels": ["feature", "enhancement"]
+                },
+                {
+                  "title": "## 🐛 Bug Fixes",
+                  "labels": ["fix", "bug"]
+                },
+                {
+                  "title": "## 🔒 Security",
+                  "labels": ["security"]
+                },
+                {
+                  "title": "## 📦 Dependencies",
+                  "labels": ["dependencies"]
+                },
+                {
+                  "title": "## 📚 Documentation",
+                  "labels": ["documentation"]
+                },
+                {
+                  "title": "## 🧰 Maintenance",
+                  "labels": ["chore", "maintenance"]
+                }
+              ]
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build release artifacts
+  build-release:
+    name: Build Release Artifacts
+    runs-on: ubuntu-latest
+    needs: [validate-version]
+    strategy:
+      matrix:
+        component: [backend, frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push release image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.component }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}-${{ matrix.component }}:${{ needs.validate-version.outputs.version }}
+            ghcr.io/${{ github.repository }}-${{ matrix.component }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ needs.validate-version.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ghcr.io/${{ github.repository }}-${{ matrix.component }}:${{ needs.validate-version.outputs.version }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.component }}.spdx.json
+
+      - name: Sign container image
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes \
+            ghcr.io/${{ github.repository }}-${{ matrix.component }}:${{ needs.validate-version.outputs.version }}
+
+      - name: Generate attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}-${{ matrix.component }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.component }}
+          path: sbom-${{ matrix.component }}.spdx.json
+
+  # Create GitHub release
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-version, changelog, build-release]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download SBOMs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: sbom-*
+          merge-multiple: true
+
+      - name: Create release notes
+        run: |
+          cat > release-notes.md << EOF
+          # PRISM ${{ needs.validate-version.outputs.version }}
+          
+          ${{ needs.changelog.outputs.changelog }}
+          
+          ## 🐳 Docker Images
+          
+          \`\`\`bash
+          # Backend
+          docker pull ghcr.io/${{ github.repository }}-backend:${{ needs.validate-version.outputs.version }}
+          
+          # Frontend
+          docker pull ghcr.io/${{ github.repository }}-frontend:${{ needs.validate-version.outputs.version }}
+          \`\`\`
+          
+          ## 🔐 Security
+          
+          All images are signed with Cosign and include SBOMs for supply chain security.
+          
+          ### Verify signatures:
+          \`\`\`bash
+          cosign verify ghcr.io/${{ github.repository }}-backend:${{ needs.validate-version.outputs.version }}
+          cosign verify ghcr.io/${{ github.repository }}-frontend:${{ needs.validate-version.outputs.version }}
+          \`\`\`
+          
+          ### Download SBOMs:
+          See attached SBOM files in release assets.
+          
+          ## 📋 Checksums
+          
+          \`\`\`
+          $(sha256sum sbom-*.json)
+          \`\`\`
+          EOF
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ needs.validate-version.outputs.version }}
+          name: Release ${{ needs.validate-version.outputs.version }}
+          body_path: release-notes.md
+          draft: false
+          prerelease: false
+          files: |
+            sbom-*.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [create-release]
+    environment:
+      name: production
+      url: https://prism.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "Deploying version ${{ needs.validate-version.outputs.version }} to production"
+          # Add your actual deployment commands here
+          # kubectl set image deployment/backend backend=ghcr.io/${{ github.repository }}-backend:${{ needs.validate-version.outputs.version }}
+          # kubectl set image deployment/frontend frontend=ghcr.io/${{ github.repository }}-frontend:${{ needs.validate-version.outputs.version }}
+
+      - name: Run smoke tests
+        run: |
+          echo "Running production smoke tests"
+          # Add your smoke test commands here
+
+      - name: Update deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment.id,
+              state: 'success',
+              environment_url: 'https://prism.example.com',
+              description: 'Deployed version ${{ needs.validate-version.outputs.version }}'
+            });
+
+  # Post-release validation
+  post-release:
+    name: Post-Release Validation
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    steps:
+      - name: Health check
+        run: |
+          for i in {1..5}; do
+            if curl -f https://prism.example.com/health; then
+              echo "Health check passed"
+              break
+            fi
+            echo "Health check attempt $i failed, retrying..."
+            sleep 30
+          done
+
+      - name: Run integration tests
+        run: |
+          echo "Running post-deployment integration tests"
+          # Add integration test commands
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "Release ${{ needs.validate-version.outputs.version }} completed successfully!"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Release failed, initiating rollback..."
+          # Add rollback commands

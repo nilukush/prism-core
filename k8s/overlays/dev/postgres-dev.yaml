@@ -1,0 +1,55 @@
+# Development PostgreSQL configuration
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: prism-dev
+spec:
+  instances: 1  # Single instance for dev
+  
+  postgresql:
+    parameters:
+      max_connections: "50"
+      shared_buffers: "128MB"
+      effective_cache_size: "512MB"
+      log_statement: "all"  # Log all statements in dev
+      log_duration: "on"
+  
+  storage:
+    size: 10Gi
+    storageClass: standard  # Use standard storage in dev
+  
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  
+  # Disable backups in dev
+  backup:
+    enabled: false
+  
+  # Simpler monitoring for dev
+  monitoring:
+    enabled: true
+    customQueries: []
+---
+# Dev pooler with lower resources
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler
+  namespace: prism-dev
+spec:
+  cluster:
+    name: postgres
+  instances: 1
+  type: rw
+  pgbouncer:
+    poolMode: session  # Use session mode for dev
+    parameters:
+      max_client_conn: "100"
+      default_pool_size: "10"
+      reserve_pool_size: "2"

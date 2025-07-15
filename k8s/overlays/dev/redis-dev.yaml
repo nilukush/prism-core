@@ -1,0 +1,70 @@
+# Development Redis configuration
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: prism-dev
+spec:
+  replicas: 1  # Single instance for dev
+  template:
+    spec:
+      containers:
+      - name: redis
+        resources:
+          requests:
+            cpu: 50m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      # Remove redis-exporter in dev to save resources
+      - $patch: delete
+        name: redis-exporter
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 1Gi
+---
+# Simplified Redis ConfigMap for dev
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: prism-dev
+data:
+  redis.conf: |
+    # Minimal Redis configuration for development
+    bind 0.0.0.0
+    protected-mode yes
+    port 6379
+    timeout 0
+    tcp-keepalive 300
+    
+    # Persistence
+    save 60 1
+    dbfilename dump.rdb
+    dir /data
+    
+    # Security
+    requirepass ${REDIS_PASSWORD}
+    
+    # Memory
+    maxmemory 256mb
+    maxmemory-policy allkeys-lru
+    
+    # Logging
+    loglevel debug
+---
+# Remove PDB in dev
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: redis-pdb
+  namespace: prism-dev
+  annotations:
+    kustomize.config.k8s.io/behavior: remove

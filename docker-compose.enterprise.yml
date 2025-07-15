@@ -1,0 +1,61 @@
+# Docker Compose override for enterprise features
+# Usage: docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
+
+services:
+  backend:
+    environment:
+      # Enable persistent sessions
+      - USE_PERSISTENT_SESSIONS=true
+      - ENVIRONMENT=production
+      
+      # Graceful shutdown configuration
+      - GRACEFUL_SHUTDOWN_TIMEOUT=45
+    env_file:
+      - .env.production  # Contains SECRET_KEY and other sensitive values
+      
+    # Add health check for better orchestration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Graceful shutdown settings
+    stop_grace_period: 60s
+    
+    # Resource limits for production
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+  
+  redis:
+    # Ensure Redis uses our config with persistence
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+      # Persist AOF file
+      - redis_aof:/data/aof
+    
+    # Production-ready settings
+    sysctls:
+      - net.core.somaxconn=65535
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  redis_aof:
+    driver: local

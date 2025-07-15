@@ -1,0 +1,42 @@
+# Staging Qdrant configuration
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: prism-staging
+spec:
+  replicas: 2  # 2 instances for staging
+  template:
+    spec:
+      containers:
+      - name: qdrant
+        env:
+        - name: QDRANT__LOG_LEVEL
+          value: "INFO"
+        - name: QDRANT__CLUSTER__ENABLED
+          value: "true"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: gp3
+      resources:
+        requests:
+          storage: 20Gi
+---
+# Staging PDB - allow 1 disruption
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: qdrant-pdb
+  namespace: prism-staging
+spec:
+  minAvailable: 1

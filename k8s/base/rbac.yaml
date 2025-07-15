@@ -1,0 +1,98 @@
+# ServiceAccount for API pods
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prism-api
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+automountServiceAccountToken: true
+---
+# ServiceAccount for Worker pods
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prism-worker
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: prism
+automountServiceAccountToken: false
+---
+# Role for API pods (minimal permissions)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prism-api
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+rules:
+# Allow reading configmaps for dynamic configuration
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+# Allow reading secrets (for external secrets operator)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+# Allow reading services for service discovery
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list"]
+---
+# RoleBinding for API pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prism-api
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prism-api
+subjects:
+- kind: ServiceAccount
+  name: prism-api
+  namespace: prism
+---
+# ClusterRole for metrics collection
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prism-metrics-reader
+  labels:
+    app.kubernetes.io/name: prism
+    app.kubernetes.io/component: monitoring
+rules:
+- apiGroups: ["metrics.k8s.io"]
+  resources: ["pods", "nodes"]
+  verbs: ["get", "list"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+# ClusterRoleBinding for metrics
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prism-metrics-reader
+  labels:
+    app.kubernetes.io/name: prism
+    app.kubernetes.io/component: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prism-metrics-reader
+subjects:
+- kind: ServiceAccount
+  name: prism-api
+  namespace: prism

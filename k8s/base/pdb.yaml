@@ -1,0 +1,33 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: prism-api-pdb
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prism-api
+      app.kubernetes.io/component: backend
+  unhealthyPodEvictionPolicy: AlwaysAllow
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: prism-worker-pdb
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-worker
+    app.kubernetes.io/component: worker
+    app.kubernetes.io/part-of: prism
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prism-worker
+      app.kubernetes.io/component: worker
+  unhealthyPodEvictionPolicy: AlwaysAllow

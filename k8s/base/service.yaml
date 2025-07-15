@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prism-api
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prism-api-headless
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+  ports:
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP

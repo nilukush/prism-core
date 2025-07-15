@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to {{ app_name }}!{% endblock %}
+
+{% block content %}
+<h2>Welcome to {{ app_name }}, {{ user_name }}! 🎉</h2>
+
+<p>We're thrilled to have you join our AI-powered product management platform. {{ app_name }} is designed to help product managers like you streamline workflows, make data-driven decisions, and build better products faster.</p>
+
+{% if verification_url %}
+<p>To get started, please verify your email address by clicking the button below:</p>
+
+<div style="text-align: center; margin: 30px 0;">
+    <a href="{{ verification_url }}" class="btn" style="color: #ffffff !important;">Verify Email Address</a>
+</div>
+
+<p style="font-size: 14px; color: #6c757d;">
+    Or copy and paste this link into your browser:<br>
+    <span style="font-family: monospace; font-size: 12px;">{{ verification_url }}</span>
+</p>
+{% endif %}
+
+<h3 style="color: #1a1a1a; font-size: 20px; margin-top: 40px;">Here's what you can do with {{ app_name }}:</h3>
+
+<ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li><strong>AI-Powered Story Generation</strong> - Create user stories and acceptance criteria in seconds</li>
+    <li><strong>Smart PRD Creation</strong> - Generate comprehensive product requirement documents with AI assistance</li>
+    <li><strong>Strategic Insights</strong> - Get data-driven recommendations for product decisions</li>
+    <li><strong>Team Collaboration</strong> - Work seamlessly with your team in real-time</li>
+    <li><strong>Integration Hub</strong> - Connect with Jira, Slack, GitHub, and more</li>
+</ul>
+
+<h3 style="color: #1a1a1a; font-size: 20px; margin-top: 40px;">Getting Started:</h3>
+
+<ol style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li>Complete your profile to personalize your experience</li>
+    <li>Create your first project or join an existing team</li>
+    <li>Try generating your first AI-powered user story</li>
+    <li>Explore our integrations to connect your favorite tools</li>
+</ol>
+
+<p>Need help getting started? Check out our:</p>
+<ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li><a href="{{ app_url }}/docs/getting-started" style="color: #0066ff;">Getting Started Guide</a></li>
+    <li><a href="{{ app_url }}/docs/video-tutorials" style="color: #0066ff;">Video Tutorials</a></li>
+    <li><a href="{{ app_url }}/docs/best-practices" style="color: #0066ff;">Best Practices</a></li>
+</ul>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 30px 0;">
+    <p style="margin: 0; font-size: 14px; color: #6c757d;">
+        <strong>Pro Tip:</strong> Enable browser notifications to stay updated on your team's activities and never miss important updates.
+    </p>
+</div>
+
+<p>If you have any questions or need assistance, our support team is here to help. Simply reply to this email or reach out at <a href="mailto:{{ support_email }}" style="color: #0066ff;">{{ support_email }}</a>.</p>
+
+<p>Welcome aboard, and happy building!</p>
+
+<p style="margin-top: 40px;">
+    Best regards,<br>
+    The {{ app_name }} Team
+</p>
+{% endblock %}
+
+{% block unsubscribe %}
+<a href="{{ app_url }}/settings/notifications" style="color: #999999;">Manage email preferences</a>
+{% endblock %}

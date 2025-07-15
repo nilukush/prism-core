@@ -1,0 +1,179 @@
+# syntax=docker/dockerfile:1.4
+# Enterprise-Grade Dockerfile for Python Poetry Projects
+# Following 2024-2025 best practices from Fortune 500 and FAANG companies
+
+# Build arguments for flexibility
+ARG PYTHON_VERSION=3.12
+ARG POETRY_VERSION=1.7.1
+
+# ============================================================================
+# STAGE 1: Base image with security updates
+# ============================================================================
+FROM python:${PYTHON_VERSION}-slim as python-base
+
+# Security: Update base image
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# STAGE 2: Poetry installation layer (cached separately)
+# ============================================================================
+FROM python-base as poetry-base
+
+# Install Poetry in isolated environment
+ENV POETRY_VERSION=${POETRY_VERSION} \
+    POETRY_HOME=/opt/poetry \
+    POETRY_NO_INTERACTION=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_VIRTUALENVS_CREATE=true
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && curl -sSL https://install.python-poetry.org | python3 - \
+    && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry \
+    && apt-get remove -y curl \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# STAGE 3: Dependencies builder with caching
+# ============================================================================
+FROM poetry-base as dependencies
+
+WORKDIR /app
+
+# Copy dependency files first for better caching
+COPY pyproject.toml poetry.lock ./
+
+# Install build dependencies
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Configure Poetry for production
+ENV POETRY_CACHE_DIR=/tmp/poetry_cache
+
+# Install dependencies with BuildKit cache mount
+# This significantly speeds up rebuilds
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --without dev --no-root --compile
+
+# ============================================================================
+# STAGE 4: Application builder
+# ============================================================================
+FROM dependencies as app-builder
+
+WORKDIR /app
+
+# Copy application code
+COPY . .
+
+# Install the application itself
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --without dev --compile
+
+# Build any additional artifacts if needed
+# RUN poetry build
+
+# ============================================================================
+# STAGE 5: Production runtime image
+# ============================================================================
+FROM python-base as production
+
+# Security: Create non-root user
+RUN groupadd -g 1000 appuser \
+    && useradd -r -u 1000 -g appuser appuser \
+    && mkdir -p /home/appuser \
+    && chown -R appuser:appuser /home/appuser
+
+# Install runtime dependencies only
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpq5 \
+        curl \
+        tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up application directory
+WORKDIR /app
+RUN chown appuser:appuser /app
+
+# Copy virtual environment from builder
+COPY --from=app-builder --chown=appuser:appuser /app/.venv /app/.venv
+
+# Copy application code
+COPY --from=app-builder --chown=appuser:appuser /app/backend ./backend
+COPY --from=app-builder --chown=appuser:appuser /app/alembic.ini ./
+
+# Set Python path
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
+# Create necessary directories
+RUN mkdir -p logs uploads \
+    && chown -R appuser:appuser logs uploads
+
+# Security: Switch to non-root user
+USER appuser
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Use tini for proper signal handling
+ENTRYPOINT ["tini", "--"]
+
+# Run application
+CMD ["uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Expose port
+EXPOSE 8000
+
+# ============================================================================
+# STAGE 6: Development image (optional)
+# ============================================================================
+FROM app-builder as development
+
+# Switch to root for development tools
+USER root
+
+# Install development tools
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        vim \
+        git \
+        postgresql-client \
+        redis-tools \
+        iputils-ping \
+        net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install development dependencies
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --with dev
+
+# Development settings
+ENV PYTHONDEBUG=1
+
+# Keep container running for debugging
+CMD ["uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# ============================================================================
+# STAGE 7: Testing image (for CI/CD)
+# ============================================================================
+FROM app-builder as testing
+
+# Install test dependencies
+RUN --mount=type=cache,target=$POETRY_CACHE_DIR \
+    poetry install --with test
+
+# Run tests by default
+CMD ["poetry", "run", "pytest", "-v", "--cov=backend", "--cov-report=term-missing"]

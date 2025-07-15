@@ -1,0 +1,102 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: prism-dev
+
+commonLabels:
+  environment: development
+  app.kubernetes.io/version: dev
+
+resources:
+  - ../../base
+  - namespace.yaml
+  - secrets.yaml
+  - postgres-dev.yaml
+  - redis-dev.yaml
+  - qdrant-dev.yaml
+
+patches:
+  - target:
+      kind: Deployment
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: ENVIRONMENT
+          value: development
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: DEBUG
+          value: "true"
+      - op: add
+        path: /spec/template/spec/containers/0/env/-
+        value:
+          name: LOG_LEVEL
+          value: DEBUG
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3
+
+  - target:
+      kind: Ingress
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: api-dev.prism.local
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: api-dev.prism.local
+      - op: replace
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt-staging
+
+  # Remove canary ingress in dev
+  - target:
+      kind: Ingress
+      name: prism-api-canary
+    patch: |
+      $patch: delete
+
+  # Reduce resource requests for dev
+  - target:
+      kind: Deployment
+      name: prism-api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 100m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 256Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 512Mi
+
+images:
+  - name: prism/prism-api
+    newTag: dev-latest
+
+configMapGenerator:
+  - name: prism-config
+    behavior: merge
+    literals:
+      - ENVIRONMENT=development
+      - LOG_FORMAT=json
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080

@@ -1,0 +1,61 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prism-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # Notifications
+    notifications.argoproj.io/subscribe.on-deployed.slack: prism-prod
+    notifications.argoproj.io/subscribe.on-health-degraded.slack: prism-prod
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: prism-prod
+spec:
+  project: prism
+  source:
+    repoURL: https://github.com/prism/prism-core
+    targetRevision: main
+    path: k8s/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prism
+  syncPolicy:
+    # Manual sync for production
+    automated: null
+    syncOptions:
+    - CreateNamespace=true
+    - PrunePropagationPolicy=foreground
+    - PruneLast=true
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
+    managedNamespaceMetadata:
+      labels:
+        environment: production
+        pod-security.kubernetes.io/enforce: restricted
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+  revisionHistoryLimit: 10
+  ignoreDifferences:
+  # Ignore replica count (managed by HPA)
+  - group: apps
+    kind: Deployment
+    jsonPointers:
+    - /spec/replicas
+  # Ignore service account tokens
+  - group: v1
+    kind: ServiceAccount
+    jsonPointers:
+    - /secrets
+  info:
+  - name: "Environment"
+    value: "Production"
+  - name: "Owner"
+    value: "Platform Team"
+  - name: "Slack"
+    value: "#prism-prod"
+  - name: "PagerDuty"
+    value: "prism-prod"

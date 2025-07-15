@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ notification_title }}{% endblock %}
+
+{% block content %}
+<h2>{{ notification_title }}</h2>
+
+<p>Hi {{ user_name }},</p>
+
+<div style="margin: 30px 0;">
+    {{ notification_body | safe }}
+</div>
+
+{% if action_url %}
+<div style="text-align: center; margin: 40px 0;">
+    <a href="{{ action_url }}" class="btn" style="color: #ffffff !important;">{{ action_text }}</a>
+</div>
+{% endif %}
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 40px 0;">
+    <p style="margin: 0 0 10px 0; font-size: 14px; color: #6c757d;">
+        <strong>Stay in the loop:</strong>
+    </p>
+    <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #6c757d;">
+        <li>Enable push notifications for real-time updates</li>
+        <li>Check your <a href="{{ app_url }}/notifications" style="color: #0066ff;">notification center</a> for all activities</li>
+        <li>Customize your <a href="{{ app_url }}/settings/notifications" style="color: #0066ff;">notification preferences</a></li>
+    </ul>
+</div>
+
+<p style="margin-top: 40px;">
+    Best regards,<br>
+    The {{ app_name }} Team
+</p>
+{% endblock %}
+
+{% block unsubscribe %}
+<a href="{{ app_url }}/settings/notifications" style="color: #999999;">Manage notification preferences</a>
+{% endblock %}

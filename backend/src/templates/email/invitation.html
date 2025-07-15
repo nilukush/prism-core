@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}You're Invited to Join {{ organization_name }}{% endblock %}
+
+{% block content %}
+<h2>You're Invited! 🎊</h2>
+
+<p>Hi there,</p>
+
+<p><strong>{{ inviter_name }}</strong> has invited you to join <strong>{{ organization_name }}</strong> on {{ app_name }} as a <strong>{{ role }}</strong>.</p>
+
+<div style="background-color: #e7f3ff; border-left: 4px solid #0066ff; padding: 20px; margin: 30px 0;">
+    <p style="margin: 0; color: #004085;">
+        {{ app_name }} is an AI-powered product management platform that helps teams build better products faster. Join {{ organization_name }} to collaborate on projects, create user stories, and leverage AI to streamline your product development process.
+    </p>
+</div>
+
+<div style="text-align: center; margin: 40px 0;">
+    <a href="{{ invitation_url }}" class="btn" style="color: #ffffff !important;">Accept Invitation</a>
+</div>
+
+<p style="font-size: 14px; color: #6c757d; text-align: center;">
+    Or copy and paste this link into your browser:<br>
+    <span style="font-family: monospace; font-size: 12px; word-break: break-all;">{{ invitation_url }}</span>
+</p>
+
+<h3 style="color: #1a1a1a; font-size: 18px; margin-top: 40px;">What happens next?</h3>
+
+<ol style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li>Click the button above to accept the invitation</li>
+    <li>Create your {{ app_name }} account (or sign in if you already have one)</li>
+    <li>You'll automatically be added to {{ organization_name }} with {{ role }} permissions</li>
+    <li>Start collaborating with your team immediately</li>
+</ol>
+
+<div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; border-radius: 6px; margin: 30px 0;">
+    <p style="margin: 0; color: #856404; font-size: 14px;">
+        <strong>⏰ Note:</strong> This invitation will expire in {{ expiry_days }} days. After that, you'll need to request a new invitation from {{ inviter_name }}.
+    </p>
+</div>
+
+<h3 style="color: #1a1a1a; font-size: 18px; margin-top: 40px;">About your role as {{ role }}:</h3>
+
+{% if role == "admin" %}
+<p>As an <strong>Admin</strong>, you'll have full access to:</p>
+<ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li>Manage team members and permissions</li>
+    <li>Configure organization settings</li>
+    <li>Access all projects and workspaces</li>
+    <li>View analytics and reports</li>
+    <li>Manage integrations and billing</li>
+</ul>
+{% elif role == "member" %}
+<p>As a <strong>Member</strong>, you'll be able to:</p>
+<ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li>Create and manage projects</li>
+    <li>Generate AI-powered user stories and PRDs</li>
+    <li>Collaborate with your team</li>
+    <li>Access shared workspaces</li>
+    <li>Use all product management features</li>
+</ul>
+{% elif role == "viewer" %}
+<p>As a <strong>Viewer</strong>, you'll be able to:</p>
+<ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+    <li>View projects and documents</li>
+    <li>Read user stories and PRDs</li>
+    <li>Access reports and analytics</li>
+    <li>Comment on items (if enabled)</li>
+</ul>
+{% endif %}
+
+<p style="margin-top: 30px;">If you have any questions about this invitation, feel free to reach out to {{ inviter_name }} or contact our support team.</p>
+
+<p style="margin-top: 40px;">
+    Looking forward to having you on the team!<br>
+    The {{ app_name }} Team
+</p>
+
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 40px;">
+    <p style="margin: 0; font-size: 14px; color: #6c757d;">
+        <strong>Not expecting this invitation?</strong> If you received this email by mistake, you can safely ignore it. The invitation link is unique to your email address and cannot be used by anyone else.
+    </p>
+</div>
+{% endblock %}
+
+{% block unsubscribe %}
+This is a one-time invitation email.
+{% endblock %}

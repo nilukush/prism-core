@@ -1,0 +1,265 @@
+# Application backup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prism-backup
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: prism
+spec:
+  schedule: "0 5 * * *"  # Daily at 5 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: prism-backup
+            app.kubernetes.io/component: backup
+          annotations:
+            sidecar.istio.io/inject: "false"
+        spec:
+          restartPolicy: OnFailure
+          serviceAccountName: prism-backup
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+          - name: backup
+            image: prism/backup-tool:latest
+            imagePullPolicy: Always
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              echo "Starting PRISM backup..."
+              
+              # Set backup timestamp
+              TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+              BACKUP_NAME="prism-backup-${TIMESTAMP}"
+              
+              # Create backup directory
+              mkdir -p /backup/${BACKUP_NAME}
+              
+              # Backup application data
+              echo "Backing up application data..."
+              kubectl exec -n prism postgres-1 -- pg_dump \
+                -h postgres-pooler \
+                -U prism \
+                -d prism \
+                --no-owner \
+                --no-acl \
+                --format=custom \
+                --verbose \
+                --file=/tmp/${BACKUP_NAME}.dump
+              
+              kubectl cp prism/postgres-1:/tmp/${BACKUP_NAME}.dump /backup/${BACKUP_NAME}/database.dump
+              
+              # Export Kubernetes resources
+              echo "Exporting Kubernetes resources..."
+              kubectl get all,cm,secret,pvc,ingress -n prism -o yaml > /backup/${BACKUP_NAME}/k8s-resources.yaml
+              
+              # Create metadata file
+              cat > /backup/${BACKUP_NAME}/metadata.json <<EOF
+              {
+                "timestamp": "${TIMESTAMP}",
+                "version": "$(kubectl get deployment prism-api -n prism -o jsonpath='{.spec.template.spec.containers[0].image}')",
+                "type": "scheduled",
+                "components": [
+                  "database",
+                  "kubernetes-resources"
+                ]
+              }
+              EOF
+              
+              # Create tarball
+              echo "Creating backup archive..."
+              tar -czf /tmp/${BACKUP_NAME}.tar.gz -C /backup ${BACKUP_NAME}
+              
+              # Upload to S3
+              echo "Uploading to S3..."
+              aws s3 cp /tmp/${BACKUP_NAME}.tar.gz s3://prism-prod-backups/application/${BACKUP_NAME}.tar.gz \
+                --storage-class GLACIER_IR \
+                --metadata timestamp=${TIMESTAMP},type=scheduled
+              
+              # Cleanup local files
+              rm -rf /backup/${BACKUP_NAME} /tmp/${BACKUP_NAME}*
+              
+              # Verify backup
+              echo "Verifying backup..."
+              aws s3api head-object --bucket prism-prod-backups --key application/${BACKUP_NAME}.tar.gz
+              
+              # Send notification
+              curl -X POST ${SLACK_WEBHOOK_URL} \
+                -H 'Content-Type: application/json' \
+                -d "{
+                  \"text\": \"✅ PRISM backup completed successfully\",
+                  \"attachments\": [{
+                    \"color\": \"good\",
+                    \"fields\": [
+                      {\"title\": \"Backup Name\", \"value\": \"${BACKUP_NAME}\", \"short\": true},
+                      {\"title\": \"Status\", \"value\": \"Success\", \"short\": true}
+                    ]
+                  }]
+                }"
+              
+              echo "Backup completed successfully!"
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials
+                  key: password
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: prism-secrets
+                  key: slack-webhook-url
+                  optional: true
+            resources:
+              requests:
+                cpu: 100m
+                memory: 256Mi
+              limits:
+                cpu: 500m
+                memory: 1Gi
+            volumeMounts:
+            - name: backup
+              mountPath: /backup
+            - name: tmp
+              mountPath: /tmp
+            securityContext:
+              allowPrivilegeEscalation: false
+              runAsNonRoot: true
+              runAsUser: 1000
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: backup
+            emptyDir:
+              sizeLimit: 10Gi
+          - name: tmp
+            emptyDir:
+              sizeLimit: 5Gi
+---
+# ServiceAccount for backup job
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prism-backup
+  namespace: prism
+---
+# Role for backup job
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: prism-backup
+  namespace: prism
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/exec"]
+  verbs: ["get", "list", "create"]
+- apiGroups: [""]
+  resources: ["configmaps", "secrets", "persistentvolumeclaims", "services"]
+  verbs: ["get", "list"]
+- apiGroups: ["apps"]
+  resources: ["deployments", "statefulsets"]
+  verbs: ["get", "list"]
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list"]
+---
+# RoleBinding for backup job
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prism-backup
+  namespace: prism
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prism-backup
+subjects:
+- kind: ServiceAccount
+  name: prism-backup
+  namespace: prism
+---
+# Backup retention cleanup job
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prism-backup-cleanup
+  namespace: prism
+spec:
+  schedule: "0 6 * * 0"  # Weekly on Sunday at 6 AM
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+          containers:
+          - name: cleanup
+            image: amazon/aws-cli:latest
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Delete backups older than 90 days
+              CUTOFF_DATE=$(date -d '90 days ago' +%Y-%m-%d)
+              echo "Deleting backups older than ${CUTOFF_DATE}..."
+              
+              aws s3api list-objects-v2 \
+                --bucket prism-prod-backups \
+                --prefix application/ \
+                --query "Contents[?LastModified<'${CUTOFF_DATE}'].Key" \
+                --output text | \
+              xargs -I {} aws s3 rm s3://prism-prod-backups/{}
+              
+              echo "Backup cleanup completed."
+            env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: SECRET_ACCESS_KEY
+            - name: AWS_DEFAULT_REGION
+              value: us-east-1
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi

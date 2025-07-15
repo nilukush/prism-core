@@ -1,0 +1,77 @@
+# Staging PostgreSQL configuration
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: prism-staging
+spec:
+  instances: 2  # 2 instances for staging
+  
+  postgresql:
+    parameters:
+      max_connections: "150"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+      log_statement: "mod"  # Log only data-modifying statements
+  
+  storage:
+    size: 50Gi
+    storageClass: gp3
+  
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+  
+  # Enable backups for staging
+  backup:
+    enabled: true
+    retentionPolicy: "7d"
+    barmanObjectStore:
+      destinationPath: "s3://prism-staging-backups/postgres"
+      s3Credentials:
+        accessKeyId:
+          name: postgres-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-backup-credentials
+          key: SECRET_ACCESS_KEY
+      wal:
+        retention: "3d"
+        maxParallel: 4
+      data:
+        compression: gzip
+        jobs: 2
+---
+# Staging scheduled backup - daily
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-backup
+  namespace: prism-staging
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM
+  backupOwnerReference: cluster
+  cluster:
+    name: postgres
+---
+# Staging pooler
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler
+  namespace: prism-staging
+spec:
+  cluster:
+    name: postgres
+  instances: 2
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "500"
+      default_pool_size: "20"
+      reserve_pool_size: "5"

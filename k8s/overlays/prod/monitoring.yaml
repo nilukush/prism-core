@@ -1,0 +1,298 @@
+# ServiceMonitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prism-api
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: prism-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: prism
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prism-api
+      app.kubernetes.io/component: backend
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    tlsConfig:
+      insecureSkipVerify: false
+---
+# ServiceMonitor for PostgreSQL
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: prism
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      cnpg.io/cluster: postgres
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+---
+# ServiceMonitor for Redis
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: redis
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+    app.kubernetes.io/part-of: prism
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/component: cache
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+---
+# ServiceMonitor for Qdrant
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: qdrant
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: prism
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/component: vector-db
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /metrics
+---
+# PrometheusRule for alerts
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prism-alerts
+  namespace: prism
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: prism.rules
+    interval: 30s
+    rules:
+    # API alerts
+    - alert: PRISMAPIDown
+      expr: up{job="prism-api"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: prism-api
+      annotations:
+        summary: "PRISM API is down"
+        description: "PRISM API instance {{ $labels.instance }} has been down for more than 5 minutes."
+    
+    - alert: PRISMAPIHighLatency
+      expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="prism-api"}[5m])) by (le)) > 1
+      for: 10m
+      labels:
+        severity: warning
+        service: prism-api
+      annotations:
+        summary: "PRISM API high latency"
+        description: "PRISM API p99 latency is above 1s (current value: {{ $value }}s)."
+    
+    - alert: PRISMAPIHighErrorRate
+      expr: sum(rate(http_requests_total{job="prism-api",status=~"5.."}[5m])) / sum(rate(http_requests_total{job="prism-api"}[5m])) > 0.05
+      for: 5m
+      labels:
+        severity: warning
+        service: prism-api
+      annotations:
+        summary: "PRISM API high error rate"
+        description: "PRISM API error rate is above 5% (current value: {{ $value | humanizePercentage }})."
+    
+    # Database alerts
+    - alert: PostgreSQLDown
+      expr: pg_up{job="postgres"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: postgres
+      annotations:
+        summary: "PostgreSQL is down"
+        description: "PostgreSQL instance {{ $labels.instance }} has been down for more than 5 minutes."
+    
+    - alert: PostgreSQLHighConnections
+      expr: sum(pg_stat_activity_count) by (instance) / sum(pg_settings_max_connections) by (instance) > 0.8
+      for: 5m
+      labels:
+        severity: warning
+        service: postgres
+      annotations:
+        summary: "PostgreSQL high connection usage"
+        description: "PostgreSQL connection usage is above 80% (current value: {{ $value | humanizePercentage }})."
+    
+    - alert: PostgreSQLSlowQueries
+      expr: rate(pg_stat_statements_mean_time_seconds{job="postgres"}[5m]) > 1
+      for: 10m
+      labels:
+        severity: warning
+        service: postgres
+      annotations:
+        summary: "PostgreSQL slow queries"
+        description: "PostgreSQL has queries with mean execution time above 1s."
+    
+    - alert: PostgreSQLReplicationLag
+      expr: pg_replication_lag{job="postgres"} > 60
+      for: 5m
+      labels:
+        severity: warning
+        service: postgres
+      annotations:
+        summary: "PostgreSQL replication lag"
+        description: "PostgreSQL replication lag is above 60 seconds (current value: {{ $value }}s)."
+    
+    # Redis alerts
+    - alert: RedisDown
+      expr: redis_up{job="redis"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: redis
+      annotations:
+        summary: "Redis is down"
+        description: "Redis instance {{ $labels.instance }} has been down for more than 5 minutes."
+    
+    - alert: RedisHighMemory
+      expr: redis_memory_used_bytes{job="redis"} / redis_memory_max_bytes{job="redis"} > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: redis
+      annotations:
+        summary: "Redis high memory usage"
+        description: "Redis memory usage is above 90% (current value: {{ $value | humanizePercentage }})."
+    
+    - alert: RedisHighKeyEviction
+      expr: rate(redis_evicted_keys_total{job="redis"}[5m]) > 100
+      for: 5m
+      labels:
+        severity: warning
+        service: redis
+      annotations:
+        summary: "Redis high key eviction rate"
+        description: "Redis is evicting more than 100 keys per second (current value: {{ $value }})."
+    
+    # Qdrant alerts
+    - alert: QdrantDown
+      expr: up{job="qdrant"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        service: qdrant
+      annotations:
+        summary: "Qdrant is down"
+        description: "Qdrant instance {{ $labels.instance }} has been down for more than 5 minutes."
+    
+    - alert: QdrantHighMemory
+      expr: container_memory_usage_bytes{pod=~"qdrant-.*"} / container_spec_memory_limit_bytes{pod=~"qdrant-.*"} > 0.9
+      for: 5m
+      labels:
+        severity: warning
+        service: qdrant
+      annotations:
+        summary: "Qdrant high memory usage"
+        description: "Qdrant memory usage is above 90% (current value: {{ $value | humanizePercentage }})."
+    
+    # Kubernetes alerts
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total{namespace="prism"}[15m]) > 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+        description: "Pod {{ $labels.namespace }}/{{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."
+    
+    - alert: PersistentVolumeSpaceLow
+      expr: kubelet_volume_stats_available_bytes{namespace="prism"} / kubelet_volume_stats_capacity_bytes{namespace="prism"} < 0.1
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "PersistentVolume space is low"
+        description: "PersistentVolume {{ $labels.persistentvolumeclaim }} has less than 10% free space."
+---
+# Grafana Dashboard ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prism-grafana-dashboard
+  namespace: prism
+  labels:
+    grafana_dashboard: "1"
+data:
+  prism-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "PRISM Production Overview",
+        "panels": [
+          {
+            "title": "API Request Rate",
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"prism-api\"}[5m])) by (status)"
+              }
+            ]
+          },
+          {
+            "title": "API Latency (p50, p95, p99)",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{job=\"prism-api\"}[5m])) by (le))"
+              },
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"prism-api\"}[5m])) by (le))"
+              },
+              {
+                "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job=\"prism-api\"}[5m])) by (le))"
+              }
+            ]
+          },
+          {
+            "title": "Database Connections",
+            "targets": [
+              {
+                "expr": "sum(pg_stat_activity_count) by (state)"
+              }
+            ]
+          },
+          {
+            "title": "Redis Memory Usage",
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes{job=\"redis\"} / redis_memory_max_bytes{job=\"redis\"}"
+              }
+            ]
+          }
+        ]
+      }
+    }

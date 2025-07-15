@@ -1,0 +1,243 @@
+# Qdrant StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: prism
+spec:
+  serviceName: qdrant-headless
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/component: vector-db
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: qdrant
+        app.kubernetes.io/component: vector-db
+        app.kubernetes.io/part-of: prism
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "6333"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+      - name: init-config
+        image: busybox:latest
+        command: ['sh', '-c']
+        args:
+          - |
+            cat > /qdrant/config/config.yaml <<EOF
+            log_level: INFO
+            
+            storage:
+              storage_path: /qdrant/storage
+              snapshots_path: /qdrant/snapshots
+              temp_path: /qdrant/temp
+              on_disk_payload: true
+              
+            service:
+              http_port: 6333
+              grpc_port: 6334
+              max_request_size_mb: 100
+              max_workers: 0
+              enable_cors: true
+              
+            cluster:
+              enabled: true
+              p2p:
+                port: 6335
+              consensus:
+                tick_period_ms: 100
+                
+            telemetry:
+              anonymize: true
+              EOF
+        volumeMounts:
+        - name: config
+          mountPath: /qdrant/config
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:latest
+        imagePullPolicy: IfNotPresent
+        args:
+        - ./qdrant
+        - --config-path
+        - /qdrant/config/config.yaml
+        ports:
+        - name: http
+          containerPort: 6333
+          protocol: TCP
+        - name: grpc
+          containerPort: 6334
+          protocol: TCP
+        - name: p2p
+          containerPort: 6335
+          protocol: TCP
+        env:
+        - name: QDRANT__SERVICE__API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qdrant-credentials
+              key: api-key
+              optional: true
+        - name: QDRANT__CLUSTER__ENABLED
+          value: "true"
+        - name: QDRANT__CLUSTER__P2P__PORT
+          value: "6335"
+        - name: QDRANT__LOG_LEVEL
+          value: "INFO"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 8Gi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: storage
+          mountPath: /qdrant/storage
+        - name: config
+          mountPath: /qdrant/config
+        - name: snapshots
+          mountPath: /qdrant/snapshots
+        - name: temp
+          mountPath: /qdrant/temp
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: snapshots
+        emptyDir: {}
+      - name: temp
+        emptyDir: {}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - qdrant
+            topologyKey: kubernetes.io/hostname
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        app.kubernetes.io/name: qdrant
+        app.kubernetes.io/component: vector-db
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 50Gi
+---
+# Qdrant Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: prism
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+  ports:
+  - name: http
+    port: 6333
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: 6334
+    targetPort: grpc
+    protocol: TCP
+---
+# Qdrant Headless Service for clustering
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant-headless
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: prism
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+  ports:
+  - name: http
+    port: 6333
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: 6334
+    targetPort: grpc
+    protocol: TCP
+  - name: p2p
+    port: 6335
+    targetPort: p2p
+    protocol: TCP
+---
+# Qdrant PodDisruptionBudget
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: qdrant-pdb
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: qdrant
+    app.kubernetes.io/component: vector-db
+    app.kubernetes.io/part-of: prism
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: qdrant
+      app.kubernetes.io/component: vector-db

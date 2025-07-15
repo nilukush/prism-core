@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}{{ report_title }} - {{ app_name }}{% endblock %}
+
+{% block extra_styles %}
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.report-table th {
+    background-color: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.report-table td {
+    padding: 12px;
+    border-bottom: 1px solid #dee2e6;
+    color: #495057;
+}
+
+.report-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.metric-card {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: #0066ff;
+    margin: 10px 0;
+}
+
+.metric-label {
+    font-size: 14px;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-change {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.metric-change.positive {
+    color: #28a745;
+}
+
+.metric-change.negative {
+    color: #dc3545;
+}
+{% endblock %}
+
+{% block content %}
+<h2>{{ report_title }}</h2>
+
+<p>Hi {{ user_name }},</p>
+
+<p>Here's your {{ report_period }} report for <strong>{{ organization_name }}</strong> on {{ app_name }}.</p>
+
+<!-- Key Metrics -->
+<div style="margin: 40px 0;">
+    <h3 style="color: #1a1a1a; font-size: 20px; margin-bottom: 20px;">Key Metrics</h3>
+    
+    <table width="100%" cellpadding="0" cellspacing="10">
+        <tr>
+            <td width="33%">
+                <div class="metric-card">
+                    <div class="metric-label">Stories Created</div>
+                    <div class="metric-value">{{ metrics.stories_created }}</div>
+                    <div class="metric-change positive">↑ {{ metrics.stories_change }}% from last period</div>
+                </div>
+            </td>
+            <td width="33%">
+                <div class="metric-card">
+                    <div class="metric-label">PRDs Generated</div>
+                    <div class="metric-value">{{ metrics.prds_generated }}</div>
+                    <div class="metric-change positive">↑ {{ metrics.prds_change }}% from last period</div>
+                </div>
+            </td>
+            <td width="33%">
+                <div class="metric-card">
+                    <div class="metric-label">Team Activity</div>
+                    <div class="metric-value">{{ metrics.team_activity }}</div>
+                    <div class="metric-change negative">↓ {{ metrics.activity_change }}% from last period</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Activity Summary -->
+<div style="margin: 40px 0;">
+    <h3 style="color: #1a1a1a; font-size: 20px; margin-bottom: 20px;">Activity Summary</h3>
+    
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Stories</th>
+                <th>PRDs</th>
+                <th>Team Members</th>
+                <th>Last Activity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td><strong>{{ project.name }}</strong></td>
+                <td>{{ project.stories_count }}</td>
+                <td>{{ project.prds_count }}</td>
+                <td>{{ project.members_count }}</td>
+                <td>{{ project.last_activity }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- AI Usage Stats -->
+<div style="margin: 40px 0;">
+    <h3 style="color: #1a1a1a; font-size: 20px; margin-bottom: 20px;">AI Usage Statistics</h3>
+    
+    <ul style="color: #4a4a4a; font-size: 16px; line-height: 1.8;">
+        <li><strong>{{ ai_stats.total_generations }}</strong> AI generations this period</li>
+        <li><strong>{{ ai_stats.time_saved_hours }}h</strong> estimated time saved</li>
+        <li><strong>{{ ai_stats.acceptance_rate }}%</strong> AI suggestion acceptance rate</li>
+        <li>Most used feature: <strong>{{ ai_stats.top_feature }}</strong></li>
+    </ul>
+</div>
+
+<!-- Top Contributors -->
+<div style="margin: 40px 0;">
+    <h3 style="color: #1a1a1a; font-size: 20px; margin-bottom: 20px;">Top Contributors</h3>
+    
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Team Member</th>
+                <th>Contributions</th>
+                <th>AI Generations</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for contributor in top_contributors %}
+            <tr>
+                <td>{{ contributor.name }}</td>
+                <td>{{ contributor.contributions }}</td>
+                <td>{{ contributor.ai_generations }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Call to Action -->
+<div style="background-color: #e7f3ff; padding: 30px; border-radius: 8px; margin: 40px 0; text-align: center;">
+    <h3 style="color: #0066ff; margin: 0 0 15px 0;">View Full Dashboard</h3>
+    <p style="margin: 0 0 20px 0; color: #004085;">
+        Get detailed insights, charts, and analytics in your {{ app_name }} dashboard.
+    </p>
+    <a href="{{ app_url }}/analytics" class="btn" style="color: #ffffff !important;">View Analytics Dashboard</a>
+</div>
+
+<!-- Tips -->
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 40px 0;">
+    <p style="margin: 0 0 10px 0; font-size: 16px; color: #495057;">
+        <strong>💡 Pro Tips for Next Period:</strong>
+    </p>
+    <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #6c757d; line-height: 1.8;">
+        <li>Try our new AI feature for competitive analysis</li>
+        <li>Schedule regular team reviews to maintain momentum</li>
+        <li>Use templates to standardize your PRD creation process</li>
+    </ul>
+</div>
+
+<p style="margin-top: 40px;">
+    Keep up the great work!<br>
+    The {{ app_name }} Team
+</p>
+
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin-top: 40px;">
+    <p style="margin: 0; font-size: 14px; color: #6c757d;">
+        <strong>Report Settings:</strong> You can customize the frequency and content of these reports in your <a href="{{ app_url }}/settings/reports" style="color: #0066ff;">report preferences</a>.
+    </p>
+</div>
+{% endblock %}
+
+{% block unsubscribe %}
+<a href="{{ app_url }}/settings/reports" style="color: #999999;">Manage report preferences</a> | 
+<a href="{{ app_url }}/unsubscribe/reports?token={{ unsubscribe_token }}" style="color: #999999;">Unsubscribe from reports</a>
+{% endblock %}

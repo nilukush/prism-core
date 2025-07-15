@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Your Email Address{% endblock %}
+
+{% block preheader %}Complete your {{ app_name }} registration by verifying your email address.{% endblock %}
+
+{% block content %}
+<div style="text-align: center; margin-bottom: 30px;">
+    <div style="font-size: 60px; margin-bottom: 20px;">✉️</div>
+    <h2 style="color: #1a1a1a; font-size: 28px; margin: 0;">Verify Your Email Address</h2>
+</div>
+
+<p>Hi {{ username }},</p>
+
+<p>Welcome to {{ app_name }}! We're thrilled to have you join our community. To complete your registration and unlock all features, please verify your email address.</p>
+
+<div style="text-align: center; margin: 40px 0;">
+    <a href="{{ verification_url }}" class="btn" style="color: #ffffff !important; padding: 16px 40px; font-size: 18px;">Verify Email Address</a>
+</div>
+
+<div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 6px; margin: 30px 0;">
+    <p style="margin: 0; color: #92400e;">
+        <strong>⏰ Important:</strong> This verification link will expire in {{ expires_in_hours }} hours for security reasons. If it expires, you can request a new verification email from your account settings.
+    </p>
+</div>
+
+<p style="font-size: 14px; color: #6c757d; text-align: center;">
+    Having trouble with the button? Copy and paste this link into your browser:<br>
+    <span style="font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; color: #0066ff;">{{ verification_url }}</span>
+</p>
+
+<h3 style="color: #1a1a1a; font-size: 20px; margin-top: 40px;">Why verify your email?</h3>
+
+<table style="width: 100%; margin: 20px 0;">
+    <tr>
+        <td style="width: 40px; vertical-align: top; padding: 10px 0;">🔐</td>
+        <td style="padding: 10px 0;">
+            <strong>Enhanced Security</strong><br>
+            Protect your account from unauthorized access
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 40px; vertical-align: top; padding: 10px 0;">📧</td>
+        <td style="padding: 10px 0;">
+            <strong>Important Updates</strong><br>
+            Receive critical account and security notifications
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 40px; vertical-align: top; padding: 10px 0;">🔑</td>
+        <td style="padding: 10px 0;">
+            <strong>Password Recovery</strong><br>
+            Enable account recovery options if you forget your password
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 40px; vertical-align: top; padding: 10px 0;">🚀</td>
+        <td style="padding: 10px 0;">
+            <strong>Full Access</strong><br>
+            Unlock all {{ app_name }} features and capabilities
+        </td>
+    </tr>
+</table>
+
+<div style="background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 40px 0;">
+    <h4 style="margin: 0 0 10px 0; color: #1a1a1a;">Security Notice</h4>
+    <p style="margin: 0; font-size: 14px; color: #4b5563;">
+        If you didn't create an account with {{ app_name }}, please ignore this email. No account will be created without email verification. If you're concerned about unauthorized use of your email, please contact our security team at <a href="mailto:security@{{ app_name|lower }}.com" style="color: #0066ff;">security@{{ app_name|lower }}.com</a>.
+    </p>
+</div>
+
+<p style="margin-top: 40px;">
+    Best regards,<br>
+    <strong>The {{ app_name }} Team</strong>
+</p>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin-top: 40px; text-align: center;">
+    <p style="margin: 0 0 10px 0; font-size: 14px; color: #6c757d;">
+        <strong>Need help?</strong>
+    </p>
+    <p style="margin: 0; font-size: 14px;">
+        <a href="{{ app_url }}/help" style="color: #0066ff; text-decoration: none;">Visit Help Center</a> • 
+        <a href="mailto:{{ support_email }}" style="color: #0066ff; text-decoration: none;">Email Support</a> • 
+        <a href="{{ app_url }}/docs" style="color: #0066ff; text-decoration: none;">Documentation</a>
+    </p>
+</div>
+{% endblock %}
+
+{% block footer_note %}
+<p style="font-size: 12px; color: #9ca3af; margin-top: 30px;">
+    This is a transactional email regarding your account security and cannot be unsubscribed from. 
+    We only send these emails when you take specific actions on {{ app_name }}.
+</p>
+{% endblock %}

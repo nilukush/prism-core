@@ -1,0 +1,283 @@
+# Production PostgreSQL configuration
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: prism
+spec:
+  instances: 3  # Full HA with 3 instances
+  
+  postgresql:
+    parameters:
+      max_connections: "500"
+      shared_buffers: "1GB"
+      effective_cache_size: "4GB"
+      maintenance_work_mem: "256MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "32MB"
+      default_statistics_target: "200"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "300"
+      work_mem: "32MB"
+      min_wal_size: "2GB"
+      max_wal_size: "8GB"
+      max_worker_processes: "16"
+      max_parallel_workers_per_gather: "8"
+      max_parallel_workers: "16"
+      max_parallel_maintenance_workers: "8"
+      
+      # Production tuning
+      wal_compression: "on"
+      wal_log_hints: "on"
+      track_io_timing: "on"
+      log_checkpoints: "on"
+      log_connections: "on"
+      log_disconnections: "on"
+      log_lock_waits: "on"
+      log_temp_files: "0"
+      log_autovacuum_min_duration: "0"
+      log_statement: "ddl"
+      log_duration: "off"
+      log_min_duration_statement: "1000"  # Log queries over 1s
+  
+  storage:
+    size: 500Gi
+    storageClass: io2  # High performance SSD
+  
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "8Gi"
+      cpu: "4"
+  
+  # Production monitoring with custom queries
+  monitoring:
+    enabled: true
+    customQueries:
+      - name: "pg_stat_statements"
+        query: |
+          SELECT
+            queryid,
+            query,
+            calls,
+            total_time,
+            mean_time,
+            stddev_time,
+            rows,
+            100.0 * shared_blks_hit / NULLIF(shared_blks_hit + shared_blks_read, 0) AS hit_percent
+          FROM pg_stat_statements
+          WHERE query NOT LIKE '%pg_stat_statements%'
+          ORDER BY mean_time DESC
+          LIMIT 50;
+        metrics:
+          - queryid:
+              usage: "LABEL"
+          - query:
+              usage: "LABEL"
+          - calls:
+              usage: "COUNTER"
+          - total_time:
+              usage: "COUNTER"
+          - mean_time:
+              usage: "GAUGE"
+          - rows:
+              usage: "COUNTER"
+          - hit_percent:
+              usage: "GAUGE"
+      
+      - name: "database_bloat"
+        query: |
+          SELECT
+            schemaname,
+            tablename,
+            pg_size_pretty(bloat_size) as bloat_size,
+            round(bloat_ratio::numeric, 2) as bloat_ratio
+          FROM (
+            SELECT
+              schemaname,
+              tablename,
+              cc.relpages * 8192 AS real_size,
+              ceil(cc.reltuples * (ts + CASE WHEN vl > ts THEN vl - ts ELSE 0 END)) AS expected_size,
+              cc.relpages * 8192 - ceil(cc.reltuples * (ts + CASE WHEN vl > ts THEN vl - ts ELSE 0 END)) AS bloat_size,
+              100 * (cc.relpages * 8192 - ceil(cc.reltuples * (ts + CASE WHEN vl > ts THEN vl - ts ELSE 0 END))) / (cc.relpages * 8192)::float AS bloat_ratio
+            FROM pg_class cc
+            JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname NOT IN ('pg_catalog', 'information_schema')
+            JOIN LATERAL (
+              SELECT
+                staattnum,
+                stawidth,
+                stanullfrac
+              FROM pg_statistic
+              WHERE starelid = cc.oid
+            ) ss ON true
+            JOIN LATERAL (
+              SELECT
+                sum(stawidth) AS ts
+              FROM pg_statistic
+              WHERE starelid = cc.oid
+            ) ts ON true
+            LEFT JOIN LATERAL (
+              SELECT
+                sum(stawidth) AS vl
+              FROM pg_statistic
+              WHERE starelid = cc.oid AND staattnum < 0
+            ) vl ON true
+            WHERE cc.relkind = 'r'
+          ) t
+          WHERE bloat_ratio > 20
+          ORDER BY bloat_size DESC
+          LIMIT 20;
+        metrics:
+          - schemaname:
+              usage: "LABEL"
+          - tablename:
+              usage: "LABEL"
+          - bloat_size:
+              usage: "LABEL"
+          - bloat_ratio:
+              usage: "GAUGE"
+  
+  # Production backup configuration
+  backup:
+    enabled: true
+    retentionPolicy: "90d"
+    barmanObjectStore:
+      destinationPath: "s3://prism-prod-backups/postgres"
+      s3Credentials:
+        accessKeyId:
+          name: postgres-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-backup-credentials
+          key: SECRET_ACCESS_KEY
+        region:
+          name: postgres-backup-credentials
+          key: AWS_DEFAULT_REGION
+      wal:
+        retention: "14d"
+        maxParallel: 16
+      data:
+        compression: gzip
+        encryption: AES256
+        immediateCheckpoint: false
+        jobs: 8
+  
+  # Production-grade settings
+  primaryUpdateStrategy: unsupervised
+  switchoverDelay: 30
+  
+  # Enhanced affinity and topology
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - postgres
+            topologyKey: kubernetes.io/hostname
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - postgres
+              topologyKey: topology.kubernetes.io/zone
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: postgres
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: postgres
+---
+# Production scheduled backups
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-backup-hourly
+  namespace: prism
+spec:
+  schedule: "0 * * * *"  # Hourly
+  backupOwnerReference: cluster
+  cluster:
+    name: postgres
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-backup-daily
+  namespace: prism
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  backupOwnerReference: cluster
+  cluster:
+    name: postgres
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-backup-weekly
+  namespace: prism
+spec:
+  schedule: "0 3 * * 0"  # Weekly on Sunday at 3 AM
+  backupOwnerReference: cluster
+  cluster:
+    name: postgres
+---
+# Production pooler with high capacity
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler
+  namespace: prism
+spec:
+  cluster:
+    name: postgres
+  instances: 3
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "5000"
+      default_pool_size: "50"
+      reserve_pool_size: "10"
+      reserve_pool_timeout: "3"
+      max_db_connections: "200"
+      max_user_connections: "200"
+      stats_period: "60"
+      autodb_idle_timeout: "900"
+      server_lifetime: "3600"
+      server_idle_timeout: "600"
+      query_timeout: "300"
+      query_wait_timeout: "60"
+      client_idle_timeout: "0"
+      client_login_timeout: "30"
+      auth_type: "scram-sha-256"
+      ignore_startup_parameters: "extra_float_digits,options"
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: cnpg.io/poolerName
+                operator: In
+                values:
+                - postgres-pooler
+            topologyKey: kubernetes.io/hostname

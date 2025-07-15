@@ -1,0 +1,265 @@
+# Production Redis configuration with Sentinel
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: prism
+spec:
+  replicas: 3  # Full HA with 3 instances
+  template:
+    spec:
+      containers:
+      - name: redis
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+      - name: redis-exporter
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      - name: redis-sentinel
+        image: redis:7-alpine
+        imagePullPolicy: IfNotPresent
+        command:
+        - redis-sentinel
+        - /etc/redis-sentinel/sentinel.conf
+        ports:
+        - name: sentinel
+          containerPort: 26379
+          protocol: TCP
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: password
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        volumeMounts:
+        - name: sentinel-config
+          mountPath: /etc/redis-sentinel
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: sentinel-config
+        configMap:
+          name: redis-sentinel-config
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: io2
+      resources:
+        requests:
+          storage: 50Gi
+---
+# Redis Sentinel Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-sentinel-config
+  namespace: prism
+data:
+  sentinel.conf: |
+    port 26379
+    dir /tmp
+    sentinel resolve-hostnames yes
+    sentinel announce-hostnames yes
+    sentinel monitor mymaster redis-0.redis-headless.prism.svc.cluster.local 6379 2
+    sentinel auth-pass mymaster ${REDIS_PASSWORD}
+    sentinel down-after-milliseconds mymaster 5000
+    sentinel parallel-syncs mymaster 1
+    sentinel failover-timeout mymaster 10000
+    sentinel deny-scripts-reconfig yes
+---
+# Sentinel Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-sentinel
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: sentinel
+    app.kubernetes.io/part-of: prism
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+  ports:
+  - name: sentinel
+    port: 26379
+    targetPort: sentinel
+    protocol: TCP
+---
+# Production Redis ConfigMap with persistence and replication
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+  namespace: prism
+data:
+  redis.conf: |
+    # Production Redis configuration
+    
+    # Network
+    bind 0.0.0.0
+    protected-mode yes
+    port 6379
+    tcp-backlog 2048
+    timeout 0
+    tcp-keepalive 300
+    
+    # General
+    daemonize no
+    supervised no
+    pidfile /var/run/redis_6379.pid
+    loglevel warning
+    logfile ""
+    databases 16
+    always-show-logo no
+    
+    # Snapshotting
+    save 900 1
+    save 300 10
+    save 60 10000
+    stop-writes-on-bgsave-error yes
+    rdbcompression yes
+    rdbchecksum yes
+    dbfilename dump.rdb
+    dir /data
+    
+    # Replication
+    masterauth ${REDIS_PASSWORD}
+    replica-serve-stale-data yes
+    replica-read-only yes
+    repl-diskless-sync yes
+    repl-diskless-sync-delay 5
+    repl-diskless-load disabled
+    repl-ping-replica-period 10
+    repl-timeout 60
+    repl-disable-tcp-nodelay no
+    repl-backlog-size 64mb
+    repl-backlog-ttl 3600
+    replica-priority 100
+    
+    # Security
+    requirepass ${REDIS_PASSWORD}
+    
+    # Clients
+    maxclients 50000
+    
+    # Memory management
+    maxmemory 4gb
+    maxmemory-policy allkeys-lru
+    maxmemory-samples 5
+    replica-ignore-maxmemory yes
+    
+    # Lazy freeing
+    lazyfree-lazy-eviction yes
+    lazyfree-lazy-expire yes
+    lazyfree-lazy-server-del yes
+    replica-lazy-flush yes
+    lazyfree-lazy-user-del yes
+    
+    # Append only mode
+    appendonly yes
+    appendfilename "appendonly.aof"
+    appendfsync everysec
+    no-appendfsync-on-rewrite no
+    auto-aof-rewrite-percentage 100
+    auto-aof-rewrite-min-size 64mb
+    aof-load-truncated yes
+    aof-use-rdb-preamble yes
+    
+    # Lua scripting
+    lua-time-limit 5000
+    
+    # Cluster
+    # cluster-enabled no
+    
+    # Slow log
+    slowlog-log-slower-than 10000
+    slowlog-max-len 256
+    
+    # Latency monitor
+    latency-monitor-threshold 100
+    
+    # Event notification
+    notify-keyspace-events "Ex"
+    
+    # Advanced config
+    hash-max-ziplist-entries 512
+    hash-max-ziplist-value 64
+    list-max-ziplist-size -2
+    list-compress-depth 0
+    set-max-intset-entries 512
+    zset-max-ziplist-entries 128
+    zset-max-ziplist-value 64
+    hll-sparse-max-bytes 3000
+    stream-node-max-bytes 4096
+    stream-node-max-entries 100
+    
+    # Active rehashing
+    activerehashing yes
+    
+    # Client output buffer limits
+    client-output-buffer-limit normal 0 0 0
+    client-output-buffer-limit replica 256mb 64mb 60
+    client-output-buffer-limit pubsub 32mb 8mb 60
+    
+    # Client query buffer limit
+    client-query-buffer-limit 1gb
+    
+    # Protocol buffer limit
+    proto-max-bulk-len 512mb
+    
+    # Frequency
+    hz 10
+    
+    # Dynamic HZ
+    dynamic-hz yes
+    
+    # AOF rewrite
+    aof-rewrite-incremental-fsync yes
+    
+    # RDB
+    rdb-save-incremental-fsync yes
+    
+    # LFU
+    lfu-log-factor 10
+    lfu-decay-time 1
+    
+    # Active defragmentation
+    activedefrag no
+    active-defrag-ignore-bytes 100mb
+    active-defrag-threshold-lower 10
+    active-defrag-threshold-upper 100
+    active-defrag-cycle-min 1
+    active-defrag-cycle-max 25
+    active-defrag-max-scan-fields 1000
+    
+    # Jemalloc
+    jemalloc-bg-thread yes

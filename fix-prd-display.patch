@@ -1,0 +1,74 @@
+--- a/frontend/src/app/app/prds/new/page.tsx
++++ b/frontend/src/app/app/prds/new/page.tsx
+@@ -223,10 +223,21 @@ export default function NewPRDPage() {
+ 
+     setLoading(true)
+     try {
++      console.log('Sending PRD generation request...')
+       const response = await apiClient.post('/api/v1/ai/generate/prd', {
+         product_name: formData.productName,
+         description: formData.description,
+         target_audience: formData.targetAudience,
+         key_features: validFeatures,
+         constraints: formData.constraints.filter(c => c.trim())
+         // Provider will use backend's DEFAULT_LLM_PROVIDER setting
+       })
+ 
++      console.log('Raw API Response:', response)
++      
+       // The backend returns the response directly, not wrapped in data
+-      if (response.success) {
++      if (response && response.success) {
++        console.log('PRD Content Length:', response.prd?.length || 0)
++        console.log('PRD Content Preview:', response.prd?.substring(0, 100) || 'No content')
++        
++        if (!response.prd) {
++          throw new Error('PRD content is empty')
++        }
++        
+         setGeneratedPRD(response.prd)
+         setPrdMetadata({
+           productName: formData.productName,
+@@ -241,9 +252,18 @@ export default function NewPRDPage() {
+           title: 'PRD Generated!',
+           description: 'Your PRD has been generated successfully.',
+         })
++      } else {
++        throw new Error(response?.message || 'Invalid response format')
+       }
+     } catch (error: any) {
+       console.error('Error generating PRD:', error)
++      console.error('Error details:', {
++        message: error.message,
++        status: error.status,
++        data: error.data,
++        stack: error.stack
++      })
+       
+       // Check if it's an authentication error
+       if (error.status === 401) {
+@@ -446,7 +466,18 @@ export default function NewPRDPage() {
+           {generatedPRD && (
+             <Card>
+               <CardHeader>
+-                <CardTitle>Generated PRD</CardTitle>
++                <div className="flex items-center justify-between">
++                  <CardTitle>Generated PRD</CardTitle>
++                  {prdMetadata && (
++                    <div className="text-sm text-muted-foreground">
++                      <span>Provider: {prdMetadata.provider}</span>
++                      {prdMetadata.model && (
++                        <span className="ml-2">Model: {prdMetadata.model}</span>
++                      )}
++                    </div>
++                  )}
++                </div>
+               </CardHeader>
+               <CardContent>
+                 <div className="prose prose-sm max-w-none">
++                  {/* Debug: Show length */}
++                  <div className="text-xs text-muted-foreground mb-2">
++                    PRD Length: {generatedPRD.length} characters
++                  </div>
+                   <pre className="whitespace-pre-wrap font-sans">{generatedPRD}</pre>
+                 </div>

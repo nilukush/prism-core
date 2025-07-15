@@ -1,0 +1,64 @@
+# Development Qdrant configuration
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: prism-dev
+spec:
+  replicas: 1  # Single instance for dev
+  template:
+    spec:
+      initContainers:
+      - name: init-config
+        args:
+          - |
+            cat > /qdrant/config/config.yaml <<EOF
+            log_level: DEBUG
+            
+            storage:
+              storage_path: /qdrant/storage
+              on_disk_payload: false  # Keep in memory for dev
+              
+            service:
+              http_port: 6333
+              grpc_port: 6334
+              enable_cors: true
+              
+            cluster:
+              enabled: false  # Disable clustering in dev
+              
+            telemetry:
+              anonymize: false
+            EOF
+      containers:
+      - name: qdrant
+        env:
+        - name: QDRANT__LOG_LEVEL
+          value: "DEBUG"
+        - name: QDRANT__CLUSTER__ENABLED
+          value: "false"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: standard
+      resources:
+        requests:
+          storage: 5Gi
+---
+# Remove PDB in dev
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: qdrant-pdb
+  namespace: prism-dev
+  annotations:
+    kustomize.config.k8s.io/behavior: remove

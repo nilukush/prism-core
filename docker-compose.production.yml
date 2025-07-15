@@ -1,0 +1,42 @@
+# Production docker-compose override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+version: '3.8'
+
+services:
+  backend:
+    env_file:
+      - .env.production
+    environment:
+      - ENVIRONMENT=production
+      - NODE_ENV=production
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+  
+  postgres:
+    env_file:
+      - .env.production
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+  
+  redis:
+    env_file:
+      - .env.production
+    restart: always
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M

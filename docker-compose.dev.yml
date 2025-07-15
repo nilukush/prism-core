@@ -1,0 +1,153 @@
+# Docker Compose configuration for local development
+# Provides enterprise features with developer-friendly defaults
+# 
+# IMPORTANT: Build strategy for local development:
+# 1. First build the development image: ./scripts/build-local-dev.sh
+# 2. Then start services: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# 
+# This uses volume mounts for hot-reloading - your code changes reflect instantly!
+# For production builds, use: ./scripts/build-enterprise.sh
+
+services:
+  backend:
+    environment:
+      # Development environment settings
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      
+      # Enterprise features - disabled by default for simpler local dev
+      # Set to true to test session persistence
+      - USE_PERSISTENT_SESSIONS=false
+      
+      # Explicitly set Redis password for development
+      - REDIS_PASSWORD=redis_dev
+      
+      # Use stable secret for consistent JWT tokens across restarts
+      - SECRET_KEY=dev-secret-key-do-not-use-in-production
+      
+      # Relaxed rate limits for development
+      - RATE_LIMIT_PER_SECOND=100
+      - RATE_LIMIT_PER_MINUTE=1000
+      - RATE_LIMIT_AUTH_PER_MINUTE=100
+      - RATE_LIMIT_AI_PER_MINUTE=50
+      
+      # Development URLs
+      - FRONTEND_URL=http://localhost:3100
+      - BACKEND_URL=http://localhost:8100
+      - DATABASE_URL=postgresql+asyncpg://prism_dev:prism_dev@postgres:5432/prism_dev
+      - REDIS_URL=redis://:redis_dev@redis:6379/0
+      - CELERY_BROKER_URL=redis://:redis_dev@redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://:redis_dev@redis:6379/2
+      
+      # Simplified CORS for local development
+      - CORS_ORIGINS=["http://localhost:3000", "http://localhost:3100", "http://localhost:8100"]
+      
+      # Development email settings (console output)
+      - EMAIL_ENABLED=false
+      - EMAIL_VERIFICATION_REQUIRED=false
+      
+      # Session configuration - shorter TTLs for testing
+      - SESSION_TTL=3600              # 1 hour for quick testing
+      - ACCESS_TOKEN_TTL=300          # 5 minutes
+      - REFRESH_TOKEN_TTL=3600        # 1 hour
+      
+      # Disable production features
+      - SENTRY_ENABLED=false
+      - OTEL_ENABLED=false
+      - PROMETHEUS_ENABLED=false
+      
+      # AI Configuration
+      - DEFAULT_LLM_PROVIDER=anthropic
+      - DEFAULT_LLM_MODEL=claude-3-sonnet-20240229
+      - ANTHROPIC_API_KEY=your-api-key-here
+      - LLM_REQUEST_TIMEOUT=180
+      - LLM_MAX_TOKENS=4000
+      
+    volumes:
+      # Mount source code for hot reloading
+      - ./backend:/app/backend
+      - ./uploads:/app/uploads
+      
+    # Override command to enable auto-reload
+    command: >
+      sh -c "
+        echo 'Waiting for database...' &&
+        sleep 5 &&
+        echo 'Starting development server with auto-reload...' &&
+        cd /app &&
+        uvicorn backend.src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir backend/src
+      "
+    
+    # Faster health check for development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  
+  postgres:
+    environment:
+      # Simple credentials for local development
+      - POSTGRES_USER=prism_dev
+      - POSTGRES_PASSWORD=prism_dev
+      - POSTGRES_DB=prism_dev
+    
+    # Persist database between restarts
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    
+    # Log all queries in development
+    command: postgres -c log_statement=all -c log_duration=on
+  
+  redis:
+    # Use Redis with persistence for session testing
+    volumes:
+      - redis_data_dev:/data
+      - ./redis.dev.conf:/usr/local/etc/redis/redis.conf:ro
+    
+    # Simple password for development
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass redis_dev
+  
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: prism-redis-commander
+    environment:
+      - REDIS_HOSTS=local:redis:6379:0:redis_dev
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    profiles:
+      - debug
+  
+  # Optional: Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: prism-mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    profiles:
+      - email
+  
+  # Optional: PGAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: prism-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@local.dev
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    profiles:
+      - debug
+
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local

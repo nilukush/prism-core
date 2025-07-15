@@ -1,0 +1,66 @@
+diff --git a/frontend/src/lib/api-client.ts b/frontend/src/lib/api-client.ts
+index abc123..def456 100644
+--- a/frontend/src/lib/api-client.ts
++++ b/frontend/src/lib/api-client.ts
+@@ -111,7 +111,7 @@ class ApiClient {
+ 
+   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+     const makeRequest = async (): Promise<T> => {
+-      const { params, data, timeout = 30000, ...requestOptions } = options
++      const { params, data, timeout = 120000, ...requestOptions } = options
+       const authHeaders = await this.getAuthHeaders()
+ 
+       const controller = new AbortController()
+diff --git a/frontend/src/app/app/prds/new/page.tsx b/frontend/src/app/app/prds/new/page.tsx
+index 123abc..456def 100644
+--- a/frontend/src/app/app/prds/new/page.tsx
++++ b/frontend/src/app/app/prds/new/page.tsx
+@@ -222,12 +222,22 @@ export default function NewPRDPage() {
+     }
+ 
+     setLoading(true)
++    
++    // Show progress toast for long-running AI generation
++    const progressId = toast({
++      title: '🤖 Generating PRD with AI',
++      description: 'This may take 1-2 minutes. Please wait...',
++      duration: 120000, // 2 minutes
++    })
++    
+     try {
+       const response = await apiClient.post('/api/v1/ai/generate/prd', {
+         product_name: formData.productName,
+         description: formData.description,
+         target_audience: formData.targetAudience,
+         key_features: validFeatures,
+         constraints: formData.constraints.filter(c => c.trim())
+         // Provider will use backend's DEFAULT_LLM_PROVIDER setting
++      }, {
++        timeout: 120000  // 2 minutes timeout for AI generation
+       })
+ 
+@@ -261,6 +271,15 @@ export default function NewPRDPage() {
+     } catch (error: any) {
+       console.error('Error generating PRD:', error)
+       
++      // Handle timeout specifically
++      if (error.name === 'AbortError' || error.status === 408) {
++        toast({
++          title: '⏱️ Request Timed Out',
++          description: 'PRD generation took too long. This might be a large request. Please try again with simpler requirements.',
++          variant: 'destructive',
++          duration: 10000,
++        })
++        return
++      }
++      
+       // Check if it's an authentication error
+       if (error.status === 401) {
+@@ -280,6 +299,8 @@ export default function NewPRDPage() {
+       }
+     } finally {
+       setLoading(false)
++      // Dismiss progress toast
++      toast.dismiss(progressId)
+     }
+   }

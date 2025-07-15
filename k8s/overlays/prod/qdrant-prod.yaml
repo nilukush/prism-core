@@ -1,0 +1,187 @@
+# Production Qdrant configuration
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: prism
+spec:
+  replicas: 3  # Full cluster with 3 instances
+  template:
+    spec:
+      initContainers:
+      - name: init-config
+        args:
+          - |
+            cat > /qdrant/config/config.yaml <<EOF
+            log_level: INFO
+            
+            storage:
+              storage_path: /qdrant/storage
+              snapshots_path: /qdrant/snapshots
+              temp_path: /qdrant/temp
+              on_disk_payload: true
+              performance:
+                max_search_threads: 0  # Use all available CPU threads
+                max_optimization_threads: 2
+              hnsw_index:
+                m: 16
+                ef_construct: 200
+                full_scan_threshold: 10000
+                max_indexing_threads: 0
+                on_disk: false
+                payload_m: null
+              optimizers:
+                deleted_threshold: 0.2
+                vacuum_min_vector_number: 1000
+                default_segment_number: 4
+                max_segment_size: 200000
+                memmap_threshold: 50000
+                indexing_threshold: 20000
+                flush_interval_sec: 5
+                max_optimization_threads: 2
+              wal:
+                wal_capacity_mb: 32
+                wal_segments_ahead: 0
+              
+            service:
+              http_port: 6333
+              grpc_port: 6334
+              max_request_size_mb: 256
+              max_workers: 0
+              enable_cors: true
+              enable_tls: false  # TLS handled by ingress
+              
+            cluster:
+              enabled: true
+              p2p:
+                port: 6335
+              consensus:
+                tick_period_ms: 100
+                bootstrap_timeout_sec: 30
+                max_message_queue_size: 1000
+                
+            telemetry:
+              anonymize: true
+              
+            # Production performance settings
+            performance:
+              max_search_threads: 0
+              max_optimization_threads: 4
+            EOF
+      containers:
+      - name: qdrant
+        env:
+        - name: QDRANT__LOG_LEVEL
+          value: "INFO"
+        - name: QDRANT__CLUSTER__ENABLED
+          value: "true"
+        - name: QDRANT__SERVICE__API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qdrant-credentials
+              key: api-key
+        - name: QDRANT__SERVICE__READ_ONLY_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qdrant-credentials
+              key: read-only-api-key
+              optional: true
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 4Gi
+          limits:
+            cpu: 4000m
+            memory: 16Gi
+        startupProbe:
+          httpGet:
+            path: /readyz
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 30
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - qdrant
+            topologyKey: kubernetes.io/hostname
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - prism-api
+              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: qdrant
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: io2
+      resources:
+        requests:
+          storage: 200Gi
+---
+# Qdrant backup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: qdrant-backup
+  namespace: prism
+spec:
+  schedule: "0 4 * * *"  # Daily at 4 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: curlimages/curl:latest
+            command:
+            - sh
+            - -c
+            - |
+              DATE=$(date +%Y%m%d-%H%M%S)
+              curl -X POST "http://qdrant:6333/collections/backup" \
+                -H "Content-Type: application/json" \
+                -H "api-key: ${QDRANT_API_KEY}" \
+                -d '{"location": "s3://prism-prod-backups/qdrant/'${DATE}'"}'
+            env:
+            - name: QDRANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: qdrant-credentials
+                  key: api-key
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-credentials
+                  key: SECRET_ACCESS_KEY
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000

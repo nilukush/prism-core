@@ -1,0 +1,218 @@
+# CloudNativePG PostgreSQL Cluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres
+  namespace: prism
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: prism
+spec:
+  description: "PRISM PostgreSQL Database Cluster"
+  
+  # Number of instances
+  instances: 3
+  
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "256MB"
+      effective_cache_size: "1GB"
+      maintenance_work_mem: "128MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "16MB"
+      min_wal_size: "1GB"
+      max_wal_size: "4GB"
+      max_worker_processes: "8"
+      max_parallel_workers_per_gather: "4"
+      max_parallel_workers: "8"
+      max_parallel_maintenance_workers: "4"
+      
+      # Enable pg_stat_statements
+      shared_preload_libraries: "pg_stat_statements"
+      pg_stat_statements.max: "10000"
+      pg_stat_statements.track: "all"
+  
+  # Bootstrap configuration
+  bootstrap:
+    initdb:
+      database: prism
+      owner: prism
+      secret:
+        name: postgres-credentials
+      dataChecksums: true
+      encoding: "UTF8"
+      localeCollate: "en_US.UTF-8"
+      localeCType: "en_US.UTF-8"
+      postInitSQL:
+        - CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+        - CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+        - CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+        - CREATE EXTENSION IF NOT EXISTS "btree_gin";
+        - CREATE EXTENSION IF NOT EXISTS "btree_gist";
+  
+  # Storage configuration
+  storage:
+    size: 100Gi
+    storageClass: fast-ssd
+  
+  # Resources
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
+  
+  # Monitoring
+  monitoring:
+    enabled: true
+    customQueries:
+      - name: "pg_stat_statements"
+        query: |
+          SELECT
+            queryid,
+            query,
+            calls,
+            total_time,
+            mean_time,
+            stddev_time,
+            rows
+          FROM pg_stat_statements
+          WHERE query NOT LIKE '%pg_stat_statements%'
+          ORDER BY mean_time DESC
+          LIMIT 20;
+        metrics:
+          - queryid:
+              usage: "LABEL"
+              description: "Query ID"
+          - query:
+              usage: "LABEL"
+              description: "Query text"
+          - calls:
+              usage: "COUNTER"
+              description: "Number of times executed"
+          - total_time:
+              usage: "COUNTER"
+              description: "Total time spent"
+          - mean_time:
+              usage: "GAUGE"
+              description: "Mean execution time"
+          - rows:
+              usage: "COUNTER"
+              description: "Total rows returned"
+  
+  # Backup configuration
+  backup:
+    enabled: true
+    retentionPolicy: "30d"
+    barmanObjectStore:
+      destinationPath: "s3://prism-backups/postgres"
+      s3Credentials:
+        accessKeyId:
+          name: postgres-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-backup-credentials
+          key: SECRET_ACCESS_KEY
+      wal:
+        retention: "7d"
+        maxParallel: 8
+      data:
+        compression: gzip
+        encryption: AES256
+        immediateCheckpoint: false
+        jobs: 4
+  
+  # High Availability
+  primaryUpdateStrategy: unsupervised
+  
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/component: database
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9187"
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - postgres
+            topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: topology.kubernetes.io/zone
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: postgres
+      containers:
+      - name: postgres
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 26
+          runAsGroup: 26
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          seccompProfile:
+            type: RuntimeDefault
+          capabilities:
+            drop:
+            - ALL
+---
+# Scheduled backup
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgres-backup
+  namespace: prism
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  backupOwnerReference: cluster
+  cluster:
+    name: postgres
+---
+# Pooler for connection pooling
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: postgres-pooler
+  namespace: prism
+spec:
+  cluster:
+    name: postgres
+  instances: 3
+  type: rw
+  pgbouncer:
+    poolMode: transaction
+    parameters:
+      max_client_conn: "1000"
+      default_pool_size: "25"
+      reserve_pool_size: "5"
+      reserve_pool_timeout: "5"
+      max_db_connections: "100"
+      max_user_connections: "100"
+      stats_period: "60"
+      autodb_idle_timeout: "3600"
+      server_lifetime: "3600"
+      server_idle_timeout: "600"
+      query_timeout: "60"
+      query_wait_timeout: "120"
+      client_idle_timeout: "0"
+      client_login_timeout: "60"
+      auth_type: "scram-sha-256"

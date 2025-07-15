@@ -1,0 +1,71 @@
+# ArgoCD App of Apps pattern
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: prism-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/prism/prism-core
+    targetRevision: HEAD
+    path: k8s/argocd/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+    - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+---
+# AppProject for PRISM
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: prism
+  namespace: argocd
+spec:
+  description: PRISM AI Agent Platform
+  sourceRepos:
+  - https://github.com/prism/prism-core
+  - https://charts.bitnami.com/bitnami
+  - https://charts.external-secrets.io
+  - https://cloudnative-pg.io/charts
+  destinations:
+  - namespace: 'prism*'
+    server: https://kubernetes.default.svc
+  - namespace: 'monitoring'
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  namespaceResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  roles:
+  - name: admin
+    policies:
+    - p, proj:prism:admin, applications, *, prism/*, allow
+    - p, proj:prism:admin, repositories, *, *, allow
+    groups:
+    - prism:admins
+  - name: developer
+    policies:
+    - p, proj:prism:developer, applications, get, prism/*, allow
+    - p, proj:prism:developer, applications, sync, prism/*, allow
+    - p, proj:prism:developer, applications, action/*, prism/*, allow
+    - p, proj:prism:developer, logs, get, prism/*, allow
+    - p, proj:prism:developer, exec, create, prism/*, allow
+    groups:
+    - prism:developers
