@@ -40,10 +40,10 @@ update_env() {
 
 # Choose AI Provider
 echo -e "${BLUE}Choose your AI provider:${NC}"
-echo "1) OpenAI GPT-3.5 (Cheapest - $0.002/PRD)"
-echo "2) OpenAI GPT-4 (Premium - $0.06/PRD)"
-echo "3) Anthropic Claude Haiku (Balanced - $0.003/PRD)"
-echo "4) Anthropic Claude Sonnet (Quality - $0.015/PRD)"
+echo "1) OpenAI GPT-3.5 (Cheapest - \$0.002/PRD)"
+echo "2) OpenAI GPT-4 (Premium - \$0.06/PRD)"
+echo "3) Anthropic Claude Haiku (Balanced - \$0.003/PRD)"
+echo "4) Anthropic Claude Sonnet (Quality - \$0.015/PRD)"
 echo "5) Keep Mock (Free - No AI)"
 echo ""
 read -p "Enter your choice (1-5): " choice
@@ -124,10 +124,10 @@ update_env "RATE_LIMIT_AI_PER_MINUTE" "5" ".env.production"
 # Ask for monthly budget
 if [ "$choice" != "5" ]; then
     echo -e "${YELLOW}Set your monthly AI budget limit:${NC}"
-    echo "1) $10/month (Conservative)"
-    echo "2) $20/month (Moderate)"
-    echo "3) $50/month (Growth)"
-    echo "4) $100/month (Scale)"
+    echo "1) \$10/month (Conservative)"
+    echo "2) \$20/month (Moderate)"
+    echo "3) \$50/month (Growth)"
+    echo "4) \$100/month (Scale)"
     echo "5) No limit (Dangerous!)"
     read -p "Enter your choice (1-5): " budget_choice
     
