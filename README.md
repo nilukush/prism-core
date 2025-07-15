@@ -97,6 +97,7 @@ Password: Admin123!@#
 - [Architecture Overview](./ARCHITECTURE.md) - System design and components
 - [API Documentation](http://localhost:8100/docs) - Interactive API explorer
 - [Contributing Guide](./CONTRIBUTING.md) - How to contribute to PRISM
+- **🆓 [Free Tier Deployment](./DEPLOYMENT_FREE_TIER.md) - Deploy PRISM for $0/month**
 
 ## 🛠️ Technology Stack
 
@@ -183,6 +184,30 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - UI components from [shadcn/ui](https://ui.shadcn.com/)
 - AI powered by [Anthropic Claude](https://www.anthropic.com/) and [OpenAI](https://openai.com/)
 - Inspired by modern product management best practices
+
+## 🚀 Deployment Options
+
+### Free Tier (Perfect for Startups & MVPs)
+Deploy PRISM completely free using:
+- **Backend**: Render.com (Free Web Service)
+- **Frontend**: Vercel (Free Hobby Plan)
+- **Database**: Neon (3GB Free PostgreSQL)
+- **Cache**: Upstash (Free Redis)
+
+```bash
+# Quick deployment script
+./scripts/deploy-to-free-tier.sh
+```
+
+See [Free Tier Deployment Guide](./DEPLOYMENT_FREE_TIER.md) for detailed instructions.
+
+### Production Deployment
+For production workloads, see our [Deployment Guide](./docs/DEPLOYMENT.md) covering:
+- Docker Compose deployment
+- Kubernetes with Helm charts
+- Cloud providers (AWS, GCP, Azure)
+- SSL/TLS configuration
+- Monitoring and scaling
 
 ## 📞 Support
 
