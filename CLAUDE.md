@@ -1,6 +1,8 @@
-# PRISM Developer Guide
+# PRISM - AI-Powered Product Management Platform
 
-This guide provides comprehensive setup and development instructions for PRISM.
+## Quick Reference for Claude
+
+This file provides essential context for Claude when working with the PRISM codebase.
 
 ## 🚀 Quick Start
 
@@ -75,7 +77,25 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.6 (2025-01-15)
+### 📊 Latest Version: 0.14.7 (2025-01-15)
+- **Professional Documentation Update** 📚:
+  - **Comprehensive Review**: Reviewed all documentation for open source readiness
+  - **Removed Personal References**: 
+    - Changed personal email to admin@example.com
+    - Fixed all GitHub URLs to use actual repository
+    - Removed internal references
+  - **Created New Documentation**:
+    - API Reference Guide with complete endpoint documentation
+    - Database Schema documentation with diagrams
+    - Production Deployment guide for multiple cloud providers
+    - GitHub templates (SUPPORT.md, FUNDING.yml)
+  - **Fixed Issues**:
+    - Inconsistent contact information
+    - Placeholder URLs and domains
+    - Missing standard open source files
+  - **Result**: Professional, comprehensive documentation ready for public use
+
+### 📊 Previous Version: 0.14.6 (2025-01-15)
 - **Fixed Health Checks Causing AI API Costs** 💰:
   - **Root Cause**: `/health/detailed` endpoint was making actual API calls to Anthropic/OpenAI
   - **Problem**: 
@@ -220,6 +240,15 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
   - Email: `nilukush@gmail.com`
   - Password: `Test123!@#`
 - Previous fixes from v0.12.0, v0.11.0, v0.10.0, v0.9.0, v0.8.9, v0.8.8, v0.8.7, v0.8.6, v0.8.5, v0.8.4, v0.8.3, v0.8.2, v0.8.1, v0.8.0 and v0.7.1 included
+
+## Current Repository Status
+
+**Open Source Release**: v0.14.7 (January 15, 2025)
+- Repository: https://github.com/nilukush/prism-core
+- License: MIT
+- Status: Public, actively maintained
+- Issues: 6 Dependabot security PRs pending
+- Documentation: Comprehensive and professional
 
 ## Project Overview
 
