@@ -1,20 +1,18 @@
 # 📊 Deployment Current Status
 
 ## 1. Render Backend
-- **Status**: ✅ Running (old deployment)
-- **New Issue Fixed**: Redis SSL connection error
-- **Fix Pushed**: Using `rediss://` instead of `ssl=True`
+- **Status**: ✅ Fixed - Redis connection for Upstash
+- **Latest Fix**: DDoS protection now uses Upstash Redis configuration
+- **Commit**: 0279ba9 - Fix: DDoS protection Redis connection for Upstash
 - **URL**: https://prism-backend-bwfx.onrender.com
-- **ETA**: New deployment with fix should be complete by now
+- **Action**: Render should auto-deploy with the fix
 
 ## 2. Vercel Frontend
-- **Status**: ✅ Fixed and ready to redeploy
-- **Latest Commit**: 4976748 - Fix non-existent package issue
-- **Issues Fixed**:
-  1. Removed non-existent @radix-ui/react-skeleton package
-  2. Updated vercel.json with correct install command
-  3. Regenerated package-lock.json
-- **Action Required**: Trigger new deployment from Vercel dashboard
+- **Status**: ❌ Stuck on old commit (5405bfb)
+- **Problem**: Vercel not using latest commit despite redeploy
+- **Latest Commit**: 0279ba9 (includes all fixes)
+- **Key Fix**: Commit 4976748 removed @radix-ui/react-skeleton
+- **Action Required**: Force deployment with latest commit
 
 ## What We Fixed
 
@@ -34,26 +32,40 @@ TypeError: AbstractConnection.__init__() got an unexpected keyword argument 'ssl
 2. Updated install command in vercel.json
 3. Regenerated package-lock.json
 
-## Next Steps
+## 🚨 Immediate Actions Required
 
-1. **Trigger New Vercel Deployment**
-   - Go to Vercel dashboard
-   - Navigate to your project
-   - Click "Redeploy" on the latest deployment
-   - Or push any new commit to trigger deployment
+### 1. Force Vercel to Use Latest Commit
 
-2. **Check Render Backend Status**
-   ```bash
-   curl https://prism-backend-bwfx.onrender.com/health
-   ```
+**Option A: Via Dashboard (Recommended)**
+1. Go to: https://vercel.com/nilukushs-projects/prism/deployments
+2. Click **"Create Deployment"**
+3. Select **"Deploy from Git commit"**
+4. Enter commit SHA: `0279ba9`
+5. Click **"Create Deployment"**
 
-3. **Once Both Are Ready**
-   - Update Vercel environment variables:
-   ```
-   NEXT_PUBLIC_API_URL=https://prism-backend-bwfx.onrender.com
-   NEXTAUTH_URL=https://[your-vercel-url].vercel.app
-   NEXTAUTH_SECRET=[generate-one]
-   ```
+**Option B: Force with Empty Commit**
+```bash
+cd /Users/nileshkumar/gh/prism/prism-core
+./scripts/force-vercel-empty-commit.sh
+```
+
+**Option C: Clear Cache**
+1. Go to Vercel Settings → Advanced
+2. Click **"Clear Build Cache"**
+3. Then redeploy
+
+### 2. Check Render Backend Status
+```bash
+curl https://prism-backend-bwfx.onrender.com/health
+```
+
+### 3. Once Both Are Ready
+Update Vercel environment variables:
+```
+NEXT_PUBLIC_API_URL=https://prism-backend-bwfx.onrender.com
+NEXTAUTH_URL=https://[your-vercel-url].vercel.app
+NEXTAUTH_SECRET=[generate-one]
+```
 
 ## Quick Commands
 
@@ -71,10 +83,10 @@ vercel logs    # View deployment logs
 ```
 
 ## Summary
-- **Render Backend**: Redis SSL fix deployed, should be running
-- **Vercel Frontend**: Package issue fixed, needs manual redeployment
-- **Latest Commit**: 4976748 - Removed non-existent package
+- **Render Backend**: ✅ DDoS Redis fix deployed (commit 0279ba9)
+- **Vercel Frontend**: ❌ Stuck on old commit 5405bfb - needs forced deployment
+- **Latest Commit**: 0279ba9 - All fixes included
 
 ---
 
-**Next Action**: Trigger a new Vercel deployment from the dashboard!
+**🚨 CRITICAL**: Vercel is ignoring the latest commits. Use Option A above to force deployment with commit `0279ba9`!

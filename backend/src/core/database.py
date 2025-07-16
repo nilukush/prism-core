@@ -19,6 +19,13 @@ database_url = str(settings.DATABASE_URL)
 if database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
+# Remove sslmode from URL if present (not supported by asyncpg)
+if "sslmode=" in database_url:
+    import re
+    database_url = re.sub(r'[?&]sslmode=[^&]*', '', database_url)
+    # Clean up URL if it ends with ? or has &&
+    database_url = database_url.rstrip('?').replace('&&', '&')
+
 # Create async engine
 engine = create_async_engine(
     database_url,
