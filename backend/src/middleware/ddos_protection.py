@@ -2,6 +2,7 @@
 Advanced DDoS protection middleware with multiple defense layers.
 """
 
+import os
 import time
 import asyncio
 import ipaddress
@@ -333,25 +334,55 @@ class DDoSProtection:
         """Initialize Redis and components."""
         async with self._init_lock:
             if self.redis is None:
-                self.redis = await aioredis.from_url(
-                    str(self.redis_url),
-                    encoding="utf-8",
-                    decode_responses=True
-                )
-                
-                self.geo_filter = GeoIPFilter(self.redis)
-                self.challenge_response = ChallengeResponse(self.redis)
-                
-                # Load whitelist/blacklist from Redis
-                await self._load_ip_lists()
+                try:
+                    # Use Upstash REST URL if available
+                    upstash_url = os.getenv("UPSTASH_REDIS_REST_URL")
+                    upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+                    
+                    if upstash_url and upstash_token:
+                        # For Upstash, construct Redis URL from REST credentials
+                        # Extract host from REST URL
+                        import re
+                        match = re.search(r'https://([^.]+)\.upstash\.io', upstash_url)
+                        if match:
+                            host = f"{match.group(1)}.upstash.io"
+                            # Use rediss:// for SSL connection
+                            redis_url = f"rediss://default:{upstash_token}@{host}:6379"
+                        else:
+                            redis_url = str(self.redis_url)
+                    else:
+                        redis_url = str(self.redis_url)
+                    
+                    # Convert redis:// to rediss:// for Upstash SSL connections
+                    if "upstash" in redis_url and redis_url.startswith("redis://"):
+                        redis_url = redis_url.replace("redis://", "rediss://", 1)
+                    
+                    self.redis = await aioredis.from_url(
+                        redis_url,
+                        encoding="utf-8",
+                        decode_responses=True
+                    )
+                    
+                    self.geo_filter = GeoIPFilter(self.redis)
+                    self.challenge_response = ChallengeResponse(self.redis)
+                    
+                    # Load whitelist/blacklist from Redis
+                    await self._load_ip_lists()
+                except Exception as e:
+                    logger.error(f"Failed to connect to Redis for DDoS protection: {e}")
+                    logger.warning("DDoS protection disabled due to Redis connection failure")
+                    # Continue without Redis - DDoS protection will be limited
+                    self.geo_filter = None
+                    self.challenge_response = None
     
     async def _load_ip_lists(self):
         """Load IP whitelist and blacklist from Redis."""
-        whitelist_members = await self.redis.smembers("ddos:whitelist")
-        self.whitelist = set(whitelist_members)
-        
-        blacklist_members = await self.redis.smembers("ddos:blacklist")
-        self.blacklist = set(blacklist_members)
+        if self.redis:
+            whitelist_members = await self.redis.smembers("ddos:whitelist")
+            self.whitelist = set(whitelist_members)
+            
+            blacklist_members = await self.redis.smembers("ddos:blacklist")
+            self.blacklist = set(blacklist_members)
     
     def _get_client_ip(self, request: Request) -> str:
         """Extract real client IP considering proxies."""
@@ -388,13 +419,14 @@ class DDoSProtection:
             )
         
         # Layer 3: Geographic restrictions
-        allowed, country = await self.geo_filter.check_geo_restrictions(client_ip)
-        if not allowed:
-            ddos_blocks.inc({"defense_layer": "geo_filter", "reason": f"country_{country}"})
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={"error": "Access denied from your region"}
-            )
+        if self.geo_filter:
+            allowed, country = await self.geo_filter.check_geo_restrictions(client_ip)
+            if not allowed:
+                ddos_blocks.inc({"defense_layer": "geo_filter", "reason": f"country_{country}"})
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"error": "Access denied from your region"}
+                )
         
         # Layer 4: Traffic pattern analysis
         self.traffic_analyzer.record_request(client_ip, request)
@@ -435,33 +467,41 @@ class DDoSProtection:
                 )
         
         # Layer 6: Connection limit per IP
-        conn_key = f"ddos:connections:{client_ip}"
-        connections = await self.redis.incr(conn_key)
-        await self.redis.expire(conn_key, 60)
-        
-        if connections > 100:  # Max 100 connections per minute
-            ddos_blocks.inc({"defense_layer": "connection_limit", "reason": "too_many_connections"})
-            return JSONResponse(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                content={"error": "Too many connections"},
-                headers={"Retry-After": "60"}
-            )
+        if self.redis:
+            conn_key = f"ddos:connections:{client_ip}"
+            connections = await self.redis.incr(conn_key)
+            await self.redis.expire(conn_key, 60)
+            
+            if connections > 100:  # Max 100 connections per minute
+                ddos_blocks.inc({"defense_layer": "connection_limit", "reason": "too_many_connections"})
+                return JSONResponse(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    content={"error": "Too many connections"},
+                    headers={"Retry-After": "60"}
+                )
         
         # Request allowed
         return None
     
     async def _add_to_blacklist(self, ip: str, duration: int = 3600):
         """Add IP to temporary blacklist."""
-        await self.redis.sadd("ddos:blacklist", ip)
-        await self.redis.setex(f"ddos:blacklist:{ip}", duration, "1")
-        
-        # Clean up after duration
-        asyncio.create_task(self._remove_from_blacklist_later(ip, duration))
+        if self.redis:
+            await self.redis.sadd("ddos:blacklist", ip)
+            await self.redis.setex(f"ddos:blacklist:{ip}", duration, "1")
+            
+            # Clean up after duration
+            asyncio.create_task(self._remove_from_blacklist_later(ip, duration))
+        else:
+            # Add to in-memory blacklist
+            self.blacklist.add(ip)
     
     async def _remove_from_blacklist_later(self, ip: str, duration: int):
         """Remove IP from blacklist after duration."""
         await asyncio.sleep(duration)
-        await self.redis.srem("ddos:blacklist", ip)
+        if self.redis:
+            await self.redis.srem("ddos:blacklist", ip)
+        else:
+            self.blacklist.discard(ip)
 
 
 class DDoSProtectionMiddleware:
