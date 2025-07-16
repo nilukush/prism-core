@@ -79,6 +79,8 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^14.1.0",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "@tanstack/react-query-devtools": "^5.18.1",

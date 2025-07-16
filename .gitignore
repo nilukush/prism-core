@@ -260,3 +260,4 @@ test_*.js
 frontend/.env.production
 DEPLOYMENT_CHECKLIST.txt
 DEPLOYMENT_URLS.txt
+.vercel
