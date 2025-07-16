@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
  * Force logout by clearing all authentication state
  * This is more aggressive than the regular logout
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const cookieStore = cookies()
     
