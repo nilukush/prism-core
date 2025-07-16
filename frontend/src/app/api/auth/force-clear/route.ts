@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   console.log('[Force Clear] Clearing all auth data')
   
   // Get cookie store
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
   return response
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   // For browser-based clearing
-  return POST(request)
+  return POST(_request)
 }

@@ -7,7 +7,7 @@ import { cookies } from 'next/headers'
  * 
  * POST /api/auth/clear-session
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const cookieStore = cookies()
     
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Also support GET for easy browser testing (in development only)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   if (process.env.NODE_ENV !== 'development') {
     return NextResponse.json(
       { error: 'Method not allowed' },
@@ -117,5 +117,5 @@ export async function GET(request: NextRequest) {
     )
   }
   
-  return POST(request)
+  return POST(_request)
 }
