@@ -2,7 +2,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps --force",
   "framework": "nextjs",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://prism-backend-bwfx.onrender.com"
