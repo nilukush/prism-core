@@ -57,7 +57,7 @@ async function performRefresh(refreshToken: string): Promise<any> {
   try {
     // Forward the refresh request to the backend
     // Use backend URL from environment variable
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8100'
+    const backendUrl = process.env['NEXT_PUBLIC_API_URL'] || 'http://localhost:8100'
     const response = await fetch(`${backendUrl}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: {
