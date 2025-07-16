@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
   // Get the token to check authentication status
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET!,
   })
 
   // Check for auth errors in the token
