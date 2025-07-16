@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
 export async function POST(_request: NextRequest) {
   try {
     // Clear all auth-related cookies
-    const cookieStore = cookies()
     const cookiesToClear = [
       'next-auth.session-token',
       '__Secure-next-auth.session-token',
