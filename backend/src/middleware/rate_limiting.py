@@ -6,6 +6,7 @@ Implements multiple strategies for enterprise-grade protection.
 import time
 import hashlib
 import ipaddress
+import os
 from typing import Optional, Dict, List, Tuple, Any
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -178,11 +179,35 @@ class DistributedRateLimiter:
         """Initialize Redis connection and strategies."""
         async with self._init_lock:
             if self.redis is None:
-                self.redis = await aioredis.from_url(
-                    str(self.redis_url),
-                    encoding="utf-8",
-                    decode_responses=True
-                )
+                try:
+                    # Use Upstash REST URL if available
+                    upstash_url = os.getenv("UPSTASH_REDIS_REST_URL")
+                    upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
+                    
+                    if upstash_url and upstash_token:
+                        # For Upstash, construct Redis URL from REST credentials
+                        # Extract host from REST URL
+                        import re
+                        match = re.search(r'https://([^.]+)\.upstash\.io', upstash_url)
+                        if match:
+                            host = f"{match.group(1)}.upstash.io"
+                            redis_url = f"redis://default:{upstash_token}@{host}:6379"
+                        else:
+                            redis_url = str(self.redis_url)
+                    else:
+                        redis_url = str(self.redis_url)
+                    
+                    self.redis = await aioredis.from_url(
+                        redis_url,
+                        encoding="utf-8",
+                        decode_responses=True,
+                        ssl=True if "upstash" in redis_url else False
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to connect to Redis: {e}")
+                    logger.warning("Rate limiting disabled due to Redis connection failure")
+                    # Continue without Redis - rate limiting will be disabled
+                    return
                 
                 # Initialize strategies
                 self.strategies = {
@@ -371,6 +396,11 @@ class DistributedRateLimiter:
         # Initialize if needed
         if self.redis is None:
             await self.initialize()
+        
+        # If Redis is still not available after initialization, skip rate limiting
+        if self.redis is None:
+            logger.debug("Rate limiting skipped - Redis not available")
+            return None
         
         # Skip rate limiting for health checks
         if request.url.path in ["/health", "/ready", "/metrics"]:
