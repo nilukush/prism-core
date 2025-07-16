@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest) {
     checks: {
       server: 'ok',
       environment: process.env.NODE_ENV === 'production' ? 'ok' : 'development',
-    },
+    } as Record<string, string>,
   }
 
   // You can add more health checks here, such as:
