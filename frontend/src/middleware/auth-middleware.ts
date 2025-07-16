@@ -15,7 +15,7 @@ export async function authMiddleware(request: NextRequest) {
     // Get the token from the request
     const token = await getToken({ 
       req: request,
-      secret: process.env.NEXTAUTH_SECRET!,
+      secret: process.env['NEXTAUTH_SECRET']!,
     })
 
     // Check if token exists and is valid

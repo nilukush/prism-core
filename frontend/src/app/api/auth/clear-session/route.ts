@@ -52,9 +52,9 @@ export async function POST(_request: NextRequest) {
       })
       
       // Also try with domain variants for complete cleanup
-      if (process.env.NEXTAUTH_URL) {
+      if (process.env["NEXTAUTH_URL"]) {
         try {
-          const url = new URL(process.env.NEXTAUTH_URL)
+          const url = new URL(process.env["NEXTAUTH_URL"])
           response.cookies.set({
             name: cookieName,
             value: '',

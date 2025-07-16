@@ -5,7 +5,7 @@ export async function GET(_request: NextRequest) {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     service: 'prism-frontend',
-    version: process.env.npm_package_version || '1.0.0',
+    version: process.env['npm_package_version'] || '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     uptime: process.uptime(),
     checks: {

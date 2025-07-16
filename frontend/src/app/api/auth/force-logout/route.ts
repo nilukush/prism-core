@@ -49,9 +49,9 @@ export async function POST(_request: NextRequest) {
     })
     
     // Also try to clear with domain variations
-    if (process.env.NEXTAUTH_URL) {
+    if (process.env["NEXTAUTH_URL"]) {
       try {
-        const url = new URL(process.env.NEXTAUTH_URL)
+        const url = new URL(process.env["NEXTAUTH_URL"])
         const domains = [
           url.hostname,
           'localhost',

@@ -14,7 +14,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3100'),
+  metadataBase: new URL(process.env["NEXT_PUBLIC_APP_URL"] || 'http://localhost:3100'),
   title: {
     default: 'PRISM - AI-Powered Product Management Platform',
     template: '%s | PRISM',
