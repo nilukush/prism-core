@@ -1,18 +1,24 @@
 # 📊 Deployment Current Status
 
 ## 1. Render Backend
-- **Status**: ✅ Fixed - Redis connection for Upstash
-- **Latest Fix**: DDoS protection now uses Upstash Redis configuration
-- **Commit**: 0279ba9 - Fix: DDoS protection Redis connection for Upstash
+- **Status**: ⚠️ Deployed but needs environment variables
 - **URL**: https://prism-backend-bwfx.onrender.com
-- **Action**: Render should auto-deploy with the fix
+- **Latest Commit**: 7d90401
+- **Issues**:
+  1. DATABASE_URL format error (incorrect query string)
+  2. Redis connecting to localhost (missing Upstash vars)
+  3. Missing SECRET_KEY and JWT_SECRET_KEY
+- **Action Required**: Fix environment variables in Render dashboard
 
 ## 2. Vercel Frontend
-- **Status**: ❌ Stuck on old commit (5405bfb)
-- **Problem**: Vercel not using latest commit despite redeploy
-- **Latest Commit**: 0279ba9 (includes all fixes)
-- **Key Fix**: Commit 4976748 removed @radix-ui/react-skeleton
-- **Action Required**: Force deployment with latest commit
+- **Status**: 🔄 Building with latest fixes
+- **Latest Commit**: 7d90401 - Fixed all missing packages
+- **Previous Issues Fixed**:
+  1. ✅ @radix-ui/react-skeleton removed
+  2. ✅ @next/bundle-analyzer added
+  3. ✅ @tailwindcss/aspect-ratio added
+  4. ✅ @tailwindcss/container-queries added
+- **Action**: Should auto-deploy successfully now
 
 ## What We Fixed
 
@@ -34,32 +40,40 @@ TypeError: AbstractConnection.__init__() got an unexpected keyword argument 'ssl
 
 ## 🚨 Immediate Actions Required
 
-### 1. Force Vercel to Use Latest Commit
+### 1. Fix Render Backend Environment Variables
 
-**Option A: Via Dashboard (Recommended)**
-1. Go to: https://vercel.com/nilukushs-projects/prism/deployments
-2. Click **"Create Deployment"**
-3. Select **"Deploy from Git commit"**
-4. Enter commit SHA: `0279ba9`
-5. Click **"Create Deployment"**
+Go to: https://dashboard.render.com/web/srv-d1r6j47fte5s73cnonqg/env
 
-**Option B: Force with Empty Commit**
-```bash
-cd /Users/nileshkumar/gh/prism/prism-core
-./scripts/force-vercel-empty-commit.sh
+**Fix DATABASE_URL Format**:
+```
+# Current (incorrect):
+postgresql://user:pass@host/neondb&sslmode=require
+
+# Correct format:
+postgresql://user:pass@host:5432/neondb?sslmode=require
 ```
 
-**Option C: Clear Cache**
-1. Go to Vercel Settings → Advanced
-2. Click **"Clear Build Cache"**
-3. Then redeploy
-
-### 2. Check Render Backend Status
-```bash
-curl https://prism-backend-bwfx.onrender.com/health
+**Add Upstash Redis Variables**:
 ```
+UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+UPSTASH_REDIS_REST_TOKEN=your-token-here
+```
+
+**Add Security Keys**:
+```bash
+# Generate secure keys:
+python -c "import secrets; print('SECRET_KEY=' + secrets.token_urlsafe(32))"
+python -c "import secrets; print('JWT_SECRET_KEY=' + secrets.token_urlsafe(32))"
+```
+
+### 2. Monitor Vercel Frontend Deployment
+
+Check status at: https://vercel.com/nilukushs-projects/prism/deployments
+
+The latest commit (7d90401) should deploy successfully with all package issues fixed.
 
 ### 3. Once Both Are Ready
+
 Update Vercel environment variables:
 ```
 NEXT_PUBLIC_API_URL=https://prism-backend-bwfx.onrender.com
