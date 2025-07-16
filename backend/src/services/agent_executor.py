@@ -27,8 +27,19 @@ class AgentExecutorService:
     
     def __init__(self):
         """Initialize the agent executor service."""
-        self.openai_client = OpenAIClient()
-        self.anthropic_client = AnthropicClient()
+        # Initialize clients based on available API keys
+        try:
+            self.openai_client = OpenAIClient()
+        except Exception as e:
+            logger.warning(f"OpenAI client initialization failed: {e}")
+            self.openai_client = None
+            
+        try:
+            self.anthropic_client = AnthropicClient()
+        except Exception as e:
+            logger.warning(f"Anthropic client initialization failed: {e}")
+            self.anthropic_client = None
+            
         self._execution_queue = asyncio.Queue()
         self._workers = []
     

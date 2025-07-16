@@ -54,7 +54,7 @@ case $choice in
         model="gpt-3.5-turbo"
         echo -e "\n${GREEN}Selected: OpenAI GPT-3.5-turbo${NC}"
         echo -e "${YELLOW}Get your API key from: https://platform.openai.com/api-keys${NC}"
-        echo -e "${YELLOW}New users get $5 free credits!${NC}"
+        echo -e "${YELLOW}New users get \$5 free credits!${NC}"
         read -p "Enter your OpenAI API key: " api_key
         
         # Update configuration
@@ -67,7 +67,7 @@ case $choice in
         provider="openai"
         model="gpt-4"
         echo -e "\n${GREEN}Selected: OpenAI GPT-4${NC}"
-        echo -e "${YELLOW}⚠️  Warning: This is expensive (~$0.06/PRD)${NC}"
+        echo -e "${YELLOW}⚠️  Warning: This is expensive (~\$0.06/PRD)${NC}"
         echo -e "${YELLOW}Get your API key from: https://platform.openai.com/api-keys${NC}"
         read -p "Enter your OpenAI API key: " api_key
         

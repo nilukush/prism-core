@@ -18,14 +18,20 @@ class AnthropicClient:
         """Initialize Anthropic client."""
         self.api_key = settings.ANTHROPIC_API_KEY
         self.base_url = "https://api.anthropic.com/v1"
-        self.client = httpx.AsyncClient(
-            headers={
-                "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
-                "Content-Type": "application/json"
-            },
-            timeout=60.0
-        )
+        
+        # Only create client if API key is available
+        if self.api_key:
+            self.client = httpx.AsyncClient(
+                headers={
+                    "x-api-key": self.api_key,
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json"
+                },
+                timeout=60.0
+            )
+        else:
+            logger.warning("Anthropic API key not found. Anthropic client will not be initialized.")
+            self.client = None
     
     async def create_message(
         self,
