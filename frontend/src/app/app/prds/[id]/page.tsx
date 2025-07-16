@@ -20,11 +20,11 @@ export default function PRDViewPage() {
 
   useEffect(() => {
     loadDocument()
-  }, [params.id])
+  }, [params['id']])
 
   const loadDocument = async () => {
     try {
-      const response = await api.documents.get(params.id as string)
+      const response = await api.documents.get(params['id'] as string)
       // The backend returns the document data directly
       setDocument(response)
     } catch (error: any) {
@@ -124,7 +124,7 @@ export default function PRDViewPage() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push(`/app/prds/${params.id}/edit`)}
+            onClick={() => router.push(`/app/prds/${params['id']}/edit`)}
           >
             <Edit className="h-4 w-4 mr-2" />
             Edit
