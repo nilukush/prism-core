@@ -191,17 +191,21 @@ class DistributedRateLimiter:
                         match = re.search(r'https://([^.]+)\.upstash\.io', upstash_url)
                         if match:
                             host = f"{match.group(1)}.upstash.io"
-                            redis_url = f"redis://default:{upstash_token}@{host}:6379"
+                            # Use rediss:// for SSL connection
+                            redis_url = f"rediss://default:{upstash_token}@{host}:6379"
                         else:
                             redis_url = str(self.redis_url)
                     else:
                         redis_url = str(self.redis_url)
                     
+                    # Convert redis:// to rediss:// for Upstash SSL connections
+                    if "upstash" in redis_url and redis_url.startswith("redis://"):
+                        redis_url = redis_url.replace("redis://", "rediss://", 1)
+                    
                     self.redis = await aioredis.from_url(
                         redis_url,
                         encoding="utf-8",
-                        decode_responses=True,
-                        ssl=True if "upstash" in redis_url else False
+                        decode_responses=True
                     )
                 except Exception as e:
                     logger.error(f"Failed to connect to Redis: {e}")
