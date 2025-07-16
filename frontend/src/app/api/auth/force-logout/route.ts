@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
 /**
  * Force logout by clearing all authentication state
@@ -7,8 +6,6 @@ import { cookies } from 'next/headers'
  */
 export async function POST(_request: NextRequest) {
   try {
-    const cookieStore = cookies()
-    
     // Create response
     const response = NextResponse.json({ 
       success: true,
