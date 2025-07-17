@@ -77,19 +77,21 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.9 (2025-01-17)
+### 📊 Latest Version: 0.14.10 (2025-01-17)
 - **Cloud Deployment Status** 🚀:
   - **Render Backend**: 
     - ⚠️ Partially working at https://prism-backend-bwfx.onrender.com
-    - Health endpoint responds (96s delay due to free tier cold start)
-    - Issues: Redis connecting to localhost, Qdrant not configured
-    - Action: Add Upstash Redis credentials in Render dashboard
+    - Health endpoint responds (slow due to free tier cold start)
+    - Fixed: Added Upstash Redis support in code (commit 92e3527)
+    - Action: Trigger redeploy on Render to use new code
   - **Vercel Frontend**:
-    - ⚠️ Deployed but not accessible at https://frontend-nilukushs-projects.vercel.app
-    - Build successful but returns 401 (missing environment variables)
-    - Fixed: TypeScript paths, Suspense boundary, build errors
-    - Action: Add NEXTAUTH_URL, NEXTAUTH_SECRET, NEXT_PUBLIC_API_URL in Vercel
-  - **See DEPLOYMENT_ACTION_PLAN.md for detailed next steps**
+    - ✅ Successfully built and deployed
+    - ⚠️ Returns 401 due to Deployment Protection enabled
+    - All environment variables properly configured
+    - Action: Disable Deployment Protection in Vercel dashboard
+  - **Next Steps**: 
+    1. Disable Vercel Deployment Protection in project settings
+    2. Trigger Render redeploy to use Upstash Redis
 
 ### 📊 Previous Version: 0.14.7 (2025-01-15)
 - **Professional Documentation Update** 📚:

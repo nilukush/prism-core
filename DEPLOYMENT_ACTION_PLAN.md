@@ -1,65 +1,62 @@
 # 🚀 PRISM Deployment Action Plan
 
-## Current Status (As of 2025-01-17)
+## Current Status (As of 2025-01-17 - UPDATED)
 
-### ✅ Backend (Render) - PARTIALLY WORKING
+### ✅ Backend (Render) - NEEDS REDEPLOY
 - **URL**: https://prism-backend-bwfx.onrender.com
 - **Health Check**: Working (returns healthy status)
-- **Issues**:
-  1. Redis connecting to localhost instead of Upstash
-  2. Vector store (Qdrant) not configured
-  3. Slow response time (96 seconds - free tier cold start)
+- **Environment Variables**: ✅ All configured including Upstash
+- **Code Fix**: ✅ Added Upstash support (commit 92e3527)
+- **Action Required**: Trigger redeploy to use new code
 
-### ❌ Frontend (Vercel) - DEPLOYED BUT NOT ACCESSIBLE
+### ⚠️ Frontend (Vercel) - DEPLOYED BUT PROTECTED
 - **URL**: https://frontend-nilukushs-projects.vercel.app
-- **Build Status**: Successful (Ready)
-- **Issue**: 401 Unauthorized (missing environment variables)
+- **Build Status**: ✅ Successful (Ready)
+- **Environment Variables**: ✅ All configured correctly
+- **Issue**: 401 Unauthorized due to Deployment Protection
 
 ## 🔧 Immediate Actions Required
 
-### 1. Configure Vercel Environment Variables
+### 1. Disable Vercel Deployment Protection 🔓
 
+1. Go to: https://vercel.com/nilukushs-projects/frontend/settings
+2. Navigate to **Settings** > **Deployment Protection**
+3. Set **Deployment Protection** to **Disabled**
+4. Save changes
+5. Your frontend will be immediately accessible!
+
+### 2. Trigger Render Backend Redeploy 🔄
+
+The backend code has been updated to use Upstash Redis. Now redeploy:
+
+**Option A: Using Render Dashboard**
+1. Go to: https://dashboard.render.com
+2. Click on your `prism-backend-bwfx` service
+3. Click **Manual Deploy** > **Deploy latest commit**
+
+**Option B: Using Render CLI**
 ```bash
-# Set production environment variables
-vercel env add NEXT_PUBLIC_API_URL production
-# Enter: https://prism-backend-bwfx.onrender.com
-
-vercel env add NEXTAUTH_URL production
-# Enter: https://frontend-nilukushs-projects.vercel.app
-
-vercel env add NEXTAUTH_SECRET production
-# Generate: openssl rand -base64 32
-
-# Optional: Add if you have these configured
-vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID production
-vercel env add GOOGLE_CLIENT_SECRET production
-vercel env add NEXT_PUBLIC_GITHUB_CLIENT_ID production
-vercel env add GITHUB_CLIENT_SECRET production
+render deploys create --service-name prism-backend-bwfx
 ```
 
-### 2. Fix Backend Redis Configuration
+### 3. Verify Deployment Success ✅
 
-The backend is trying to connect to localhost:6379. You need to:
-
-1. **Add Upstash Redis environment variables in Render**:
-   ```
-   UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
-   UPSTASH_REDIS_REST_TOKEN=your-token-here
-   ```
-
-2. **Or use Redis Cloud free tier**:
-   - Sign up at https://redis.com/try-free/
-   - Get connection string
-   - Add as REDIS_URL in Render
-
-### 3. Redeploy After Configuration
-
+**Frontend Check**:
 ```bash
-# Redeploy Vercel with new env vars
-vercel --prod
+# Should return 200 OK (not 401)
+curl -I https://frontend-nilukushs-projects.vercel.app
 
-# Trigger Render redeploy (from Render dashboard or CLI)
-render deploys create --service-name prism-backend-bwfx
+# Or open in browser
+open https://frontend-nilukushs-projects.vercel.app
+```
+
+**Backend Check**:
+```bash
+# Should respond faster after redeploy
+curl https://prism-backend-bwfx.onrender.com/health
+
+# Check API docs
+open https://prism-backend-bwfx.onrender.com/docs
 ```
 
 ## 📊 Monitoring Commands
