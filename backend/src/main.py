@@ -15,7 +15,7 @@ from prometheus_client import make_asgi_app
 
 from backend.src.core.config import settings
 from backend.src.core.database import init_db, close_db
-from backend.src.core.cache import cache
+from backend.src.core.cache_unified import cache
 from backend.src.core.logging import setup_logging, get_logger
 from backend.src.core.monitoring import setup_monitoring, ACTIVE_REQUESTS, track_request
 from backend.src.api import api_router

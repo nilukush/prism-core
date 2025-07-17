@@ -18,7 +18,7 @@ from langchain.callbacks import AsyncCallbackHandler
 
 from backend.src.core.config import settings
 from backend.src.core.logging import get_logger
-from backend.src.core.cache import cache, agent_cache_key
+from backend.src.core.cache_unified import cache, agent_cache_key
 from backend.src.core.monitoring import track_llm_request, track_agent_execution
 
 logger = get_logger(__name__)

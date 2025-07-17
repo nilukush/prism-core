@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     REDIS_SSL: bool = False
     REDIS_POOL_SIZE: int = 10
     
+    # Upstash Redis (for cloud deployment)
+    UPSTASH_REDIS_REST_URL: Optional[str] = None
+    UPSTASH_REDIS_REST_TOKEN: Optional[str] = None
+    
     # Vector Database (Qdrant)
     QDRANT_URL: str = "http://localhost:6333"
     QDRANT_API_KEY: Optional[str] = None
