@@ -4,11 +4,6 @@
   "outputDirectory": "frontend/.next",
   "installCommand": "cd frontend && npm install --legacy-peer-deps --force",
   "regions": ["iad1"],
-  "functions": {
-    "frontend/src/app/api/auth/[...nextauth]/route.ts": {
-      "maxDuration": 10
-    }
-  },
   "env": {
     "NEXT_PUBLIC_API_URL": "https://prism-backend-bwfx.onrender.com",
     "NEXT_PUBLIC_APP_URL": "https://prism-app.vercel.app",
