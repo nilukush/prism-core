@@ -77,23 +77,24 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.14 (2025-01-17)
+### 📊 Latest Version: 0.14.15 (2025-01-17)
 - **Cloud Deployment Status** 🎆:
   - **Render Backend**: 
     - ✅ OPERATIONAL at https://prism-backend-bwfx.onrender.com
-    - ✅ Health check responding
-    - ⚠️ Vector store errors fixed (now logs as warning, not error)
-    - ℹ️ Running without vector database (not available in free tier)
+    - ✅ Health check responding perfectly
+    - ✅ Vector store errors fixed (gracefully skips when unavailable)
+    - ℹ️ Running without Qdrant vector database (optional feature, not needed for core functionality)
   - **Vercel Frontend**:
-    - ✅ Successfully deployed to new project: `frontend`
-    - ✅ Latest code deployed (bypassed stuck Git integration)
-    - ⚠️ Access requires Protection Bypass token (team limitation)
-    - 📝 Action Required: Connect to GitHub (see VERCEL_PROJECT_CLEANUP.md)
-  - **Deployment Details**:
-    - Backend errors: 0 (vector store now handled gracefully)
-    - Frontend errors: 0
-    - Monthly Cost: $0
-    - Frontend project name: `frontend` (not `prism`)
+    - ✅ Successfully deployed to project: `frontend`
+    - ✅ Latest code deployed (commit: 10181e5)
+    - 📝 Next Steps:
+      1. Connect to GitHub (see VERCEL_GITHUB_CONNECTION.md)
+      2. Generate Protection Bypass token (see PROTECTION_BYPASS_TOKEN.md)
+  - **Deployment Summary**:
+    - Backend: 0 errors (vector store handled gracefully)
+    - Frontend: 0 build errors
+    - Cost: $0/month
+    - Access: Generate bypass token in Vercel settings
 
 ### 📊 Previous Version: 0.14.7 (2025-01-15)
 - **Professional Documentation Update** 📚:
