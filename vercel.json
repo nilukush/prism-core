@@ -3,6 +3,7 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/.next",
   "installCommand": "cd frontend && npm install --legacy-peer-deps --force",
+  "ignoreCommand": "if [ \"$VERCEL_GIT_PREVIOUS_SHA\" == \"\" ]; then exit 1; else git diff --quiet $VERCEL_GIT_PREVIOUS_SHA $VERCEL_GIT_COMMIT_SHA ./frontend; fi",
   "regions": ["iad1"],
   "env": {
     "NEXT_PUBLIC_API_URL": "https://prism-backend-bwfx.onrender.com",
