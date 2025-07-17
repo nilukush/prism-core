@@ -28,6 +28,7 @@ class VectorStore:
         self.client: Optional[QdrantClient] = None
         self.collection_name = settings.QDRANT_COLLECTION_NAME
         self.vector_size = 1536  # OpenAI embedding size
+        self.enabled = True  # Track if vector store is available
     
     async def initialize(self) -> None:
         """Initialize connection to Qdrant."""
@@ -50,8 +51,9 @@ class VectorStore:
             
             logger.info("vector_store_initialized", url=settings.QDRANT_URL)
         except Exception as e:
-            logger.error("vector_store_initialization_failed", error=str(e))
-            raise
+            logger.warning("vector_store_initialization_skipped", error=str(e))
+            self.enabled = False
+            # Don't raise - allow app to run without vector store
     
     async def close(self) -> None:
         """Close vector store connection."""
@@ -108,8 +110,9 @@ class VectorStore:
                 
                 logger.info("vector_collection_created", name=self.collection_name)
         except Exception as e:
-            logger.error("collection_creation_failed", error=str(e))
-            raise
+            logger.warning("collection_creation_skipped", error=str(e), reason="Vector database not available in free tier")
+            # Don't raise - allow app to run without vector store
+            self.enabled = False
     
     def generate_id(self, content: str, metadata: Dict[str, Any]) -> str:
         """Generate deterministic ID for content."""
@@ -136,6 +139,10 @@ class VectorStore:
         Returns:
             Document ID
         """
+        if not self.enabled or not self.client:
+            logger.debug("vector_store_disabled_skipping_upsert")
+            return str(uuid.uuid4())  # Return dummy ID when disabled
+            
         try:
             # Generate ID if not provided
             if not document_id:
