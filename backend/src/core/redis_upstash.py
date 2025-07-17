@@ -10,7 +10,7 @@ from urllib.parse import quote
 import asyncio
 from functools import wraps
 
-from ..config import settings
+from backend.src.core.config import settings
 
 
 class UpstashRedis:
