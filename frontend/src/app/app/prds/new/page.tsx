@@ -223,7 +223,16 @@ export default function NewPRDPage() {
     setLoading(true)
     try {
       console.log('Sending PRD generation request...')
-      const response = await apiClient.post('/api/v1/ai/generate/prd', {
+      const response = await apiClient.post<{
+        success: boolean;
+        prd: string;
+        metadata?: {
+          generated_at: string;
+          model: string;
+          provider: string;
+        };
+        message?: string;
+      }>('/api/v1/ai/generate/prd', {
         product_name: formData.productName,
         description: formData.description,
         target_audience: formData.targetAudience,
