@@ -77,19 +77,19 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.11 (2025-01-17)
+### 📊 Latest Version: 0.14.12 (2025-01-17)
 - **Cloud Deployment Status** 🎆:
   - **Render Backend**: 
     - ✅ FULLY OPERATIONAL at https://prism-backend-bwfx.onrender.com
     - Successfully using Upstash Redis (confirmed in logs)
     - Fast response times (under 1 second)
-    - Minor import error to fix in next deploy
+    - Import path error fixed in redis_upstash.py
   - **Vercel Frontend**:
     - ✅ Successfully built and deployed with zero errors
-    - ⚠️ Access blocked by Vercel team authentication (cannot be disabled)
-    - All code fixes applied, all environment variables configured
-    - Solution: Sign in with Vercel account or use alternative platform
-  - **Summary**: Both services deployed successfully. Backend fully accessible, frontend requires Vercel authentication due to team account limitations.
+    - ✅ Latest code deployed (verified with manual deployment)
+    - ⚠️ Access requires Protection Bypass token due to team authentication
+    - Solution: Generate bypass token in Vercel settings (see VERCEL_BYPASS_INSTRUCTIONS.md)
+  - **Summary**: Both services fully deployed. Backend publicly accessible, frontend requires bypass token or alternative deployment.
 
 ### 📊 Previous Version: 0.14.7 (2025-01-15)
 - **Professional Documentation Update** 📚:

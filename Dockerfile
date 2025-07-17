@@ -91,12 +91,12 @@ ENV PATH="/app/.local/bin:${PATH}"
 # Expose port
 EXPOSE 8000
 
-# Health check
+# Health check - use PORT from environment variable
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Default command
-CMD ["uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command - use PORT from environment variable
+CMD ["sh", "-c", "uvicorn backend.src.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
 
 # Stage 4: Development image
 FROM production as development
@@ -141,5 +141,5 @@ RUN mkdir -p /home/prism && chown -R prism:prism /home/prism /app
 # Switch back to prism user
 USER prism
 
-# Development command with auto-reload
-CMD ["uvicorn", "backend.src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Development command with auto-reload - use PORT from environment variable
+CMD ["sh", "-c", "uvicorn backend.src.main:app --host 0.0.0.0 --port ${PORT:-8000} --reload"]
