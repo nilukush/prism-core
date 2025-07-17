@@ -1,182 +1,126 @@
-# 🚨 PRISM Deployment Action Plan
+# 🚀 PRISM Deployment Action Plan
 
-## Current Issues Summary
+## Current Status (As of 2025-01-17)
 
-1. **Render Backend**: Not responding (timeout/502)
-2. **OpenAI API Key**: Invalid/expired (401 error)
-3. **Vercel Frontend**: Build failing (wrong directory)
+### ✅ Backend (Render) - PARTIALLY WORKING
+- **URL**: https://prism-backend-bwfx.onrender.com
+- **Health Check**: Working (returns healthy status)
+- **Issues**:
+  1. Redis connecting to localhost instead of Upstash
+  2. Vector store (Qdrant) not configured
+  3. Slow response time (96 seconds - free tier cold start)
 
-## 🔥 Priority 1: Fix Render Backend
+### ❌ Frontend (Vercel) - DEPLOYED BUT NOT ACCESSIBLE
+- **URL**: https://frontend-nilukushs-projects.vercel.app
+- **Build Status**: Successful (Ready)
+- **Issue**: 401 Unauthorized (missing environment variables)
 
-### Immediate Actions:
+## 🔧 Immediate Actions Required
 
-1. **Go to Render Dashboard**
-   - URL: https://dashboard.render.com
-   - Navigate to: prism-backend-bwfx service
-   - Click on "Logs" tab
+### 1. Configure Vercel Environment Variables
 
-2. **Check for These Common Errors**:
-   ```
-   ❌ "Port 8000 is already in use" → Add PORT=8000 env var
-   ❌ "Cannot connect to database" → Check DATABASE_URL
-   ❌ "Redis connection refused" → Verify Upstash credentials
-   ❌ "Module not found" → Build cache issue
-   ```
-
-3. **Required Environment Variables**:
-   ```bash
-   # CRITICAL - Must have these
-   PORT=8000
-   DATABASE_URL=postgresql://neondb_owner:npg_rQk92nifVozE@ep-tiny-grass-aet08v5u-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
-   UPSTASH_REDIS_REST_URL=https://fluent-bee-10196.upstash.io
-   UPSTASH_REDIS_REST_TOKEN=ASfUAAIjcDE1MTAyZDFlYTA5ZDQ0MTc0Yjc4OTZiODQxN2IyN2MwMHAxMA
-   SECRET_KEY=0a6c2e3f6cf70fa1f3e442932af087bb8c437a498ad9f7c9145321ad98ef2c74
-   JWT_SECRET_KEY=5617ccf9d5fb1a5f15ccf1ff76a1909f91266fdfea5176fa574dc662c9ee164b
-   
-   # AI Configuration
-   DEFAULT_LLM_PROVIDER=openai
-   DEFAULT_LLM_MODEL=gpt-3.5-turbo
-   OPENAI_API_KEY=[YOUR-NEW-KEY-HERE]
-   
-   # Cost Controls
-   AI_CACHE_ENABLED=true
-   AI_CACHE_TTL=86400
-   AI_MONTHLY_BUDGET_USD=20
-   RATE_LIMIT_AI_PER_MINUTE=5
-   
-   # System
-   ENVIRONMENT=production
-   LOG_LEVEL=INFO
-   DOCS_ENABLED=true
-   RATE_LIMIT_ENABLED=false
-   ```
-
-4. **If Still Failing**:
-   - Click "Manual Deploy" → "Clear build cache & deploy"
-   - This forces a fresh build
-
-## 🔑 Priority 2: Fix OpenAI API Key
-
-Your API key was likely exposed in screenshots and revoked by OpenAI.
-
-### Steps:
-1. **Generate New API Key**:
-   - Go to: https://platform.openai.com/api-keys
-   - Click "Create new secret key"
-   - Name it: "PRISM Production"
-   - Copy immediately (shown only once!)
-
-2. **Update in Render**:
-   - Dashboard → prism-backend-bwfx → Environment
-   - Update: `OPENAI_API_KEY=sk-proj-[your-new-key]`
-   - Click "Save Changes"
-   - Service will auto-restart
-
-3. **Set Billing Alerts**:
-   - https://platform.openai.com/account/billing
-   - Add payment method if needed
-   - Set alerts at: $5, $10, $15, $20
-
-## 🎨 Priority 3: Fix Vercel Deployment
-
-### Option A: Vercel Dashboard (Easiest)
-1. Go to: https://vercel.com/dashboard
-2. Click "Add New..." → "Project"
-3. Import: `nilukush/prism-core`
-4. **IMPORTANT**: Set Root Directory to `frontend`
-5. Add environment variables:
-   ```
-   NEXT_PUBLIC_API_URL=https://prism-backend-bwfx.onrender.com
-   NEXTAUTH_URL=https://[your-vercel-url].vercel.app
-   NEXTAUTH_SECRET=[generate-with-openssl-rand-base64-32]
-   ```
-6. Click "Deploy"
-
-### Option B: CLI Fix
 ```bash
-cd frontend
+# Set production environment variables
+vercel env add NEXT_PUBLIC_API_URL production
+# Enter: https://prism-backend-bwfx.onrender.com
 
-# Install Vercel CLI if needed
-npm i -g vercel
+vercel env add NEXTAUTH_URL production
+# Enter: https://frontend-nilukushs-projects.vercel.app
 
-# Deploy with correct settings
+vercel env add NEXTAUTH_SECRET production
+# Generate: openssl rand -base64 32
+
+# Optional: Add if you have these configured
+vercel env add NEXT_PUBLIC_GOOGLE_CLIENT_ID production
+vercel env add GOOGLE_CLIENT_SECRET production
+vercel env add NEXT_PUBLIC_GITHUB_CLIENT_ID production
+vercel env add GITHUB_CLIENT_SECRET production
+```
+
+### 2. Fix Backend Redis Configuration
+
+The backend is trying to connect to localhost:6379. You need to:
+
+1. **Add Upstash Redis environment variables in Render**:
+   ```
+   UPSTASH_REDIS_REST_URL=https://your-instance.upstash.io
+   UPSTASH_REDIS_REST_TOKEN=your-token-here
+   ```
+
+2. **Or use Redis Cloud free tier**:
+   - Sign up at https://redis.com/try-free/
+   - Get connection string
+   - Add as REDIS_URL in Render
+
+### 3. Redeploy After Configuration
+
+```bash
+# Redeploy Vercel with new env vars
 vercel --prod
 
-# When prompted:
-# - Set up and deploy? Y
-# - Which scope? (your account)
-# - Link to existing project? N
-# - What's your project name? prism-frontend
-# - In which directory is your code? ./
-# - Want to modify settings? N
+# Trigger Render redeploy (from Render dashboard or CLI)
+render deploys create --service-name prism-backend-bwfx
 ```
 
-## ✅ Success Checklist
+## 📊 Monitoring Commands
 
-After completing the above:
-
-1. **Backend Health Check**:
-   ```bash
-   curl https://prism-backend-bwfx.onrender.com/health
-   # Should return: {"status":"healthy","timestamp":"...","version":"1.0.0"}
-   ```
-
-2. **API Documentation**:
-   ```bash
-   open https://prism-backend-bwfx.onrender.com/docs
-   ```
-
-3. **Test AI Integration**:
-   ```bash
-   # Will need auth, but should not return 500
-   curl -X POST https://prism-backend-bwfx.onrender.com/api/v1/ai/generate/prd \
-     -H "Content-Type: application/json" \
-     -d '{"product_name":"Test","description":"Test product"}'
-   ```
-
-## 🚀 Quick Debug Commands
-
+### Render CLI
 ```bash
-# Check backend status
-curl -I https://prism-backend-bwfx.onrender.com/health
+# Install (if not already)
+brew install render
 
-# Test database connection (requires auth)
-curl https://prism-backend-bwfx.onrender.com/api/v1/health/detailed
+# Login
+render login
 
-# View all registered routes
-curl https://prism-backend-bwfx.onrender.com/openapi.json | jq '.paths | keys'
+# Monitor logs
+render logs --service-name prism-backend-bwfx --tail
+
+# Check status
+render services show --name prism-backend-bwfx
 ```
 
-## 📱 Emergency Contacts
+### Vercel CLI
+```bash
+# Check deployment status
+vercel list
 
-- **Render Status**: https://status.render.com
-- **OpenAI Status**: https://status.openai.com
-- **Vercel Status**: https://www.vercel-status.com
+# View logs
+vercel logs https://frontend-nilukushs-projects.vercel.app
 
-## ⏱️ Timeline
+# Check environment variables
+vercel env ls
+```
 
-1. **Fix Render** (10-15 min): Check logs, add env vars, redeploy
-2. **Fix OpenAI** (5 min): Generate key, update in Render
-3. **Deploy Frontend** (5-10 min): Via Vercel dashboard
+## 🎯 Expected Results After Fix
 
-**Total Time**: ~30 minutes to full deployment
+1. **Backend**: Health check should be faster (<5 seconds)
+2. **Frontend**: Should load without 401 error
+3. **Login**: Should work with configured auth providers
+4. **API Calls**: Frontend should connect to backend successfully
 
----
+## 🚨 Common Issues & Solutions
 
-## 🆘 If Still Stuck
+### Issue: Frontend still shows 401
+**Solution**: Make sure NEXTAUTH_URL exactly matches your Vercel URL
 
-1. **Render not starting?**
-   - Share the error logs from Render dashboard
-   - Try deploying a simple "hello world" to test
+### Issue: Backend still slow
+**Solution**: Render free tier goes to sleep. Consider upgrading or using a keep-alive service
 
-2. **OpenAI still failing?**
-   - Double-check key starts with `sk-proj-`
-   - Ensure you have credits/payment method
-   - Try key in local test first
+### Issue: Cannot login
+**Solution**: Check NEXTAUTH_SECRET is set and matches between deploys
 
-3. **Vercel still failing?**
-   - Make sure you selected `frontend` as root
-   - Check package.json exists in frontend/
-   - Try local build first: `cd frontend && npm run build`
+## 📝 Next Steps After Basic Setup
 
-Remember: First deployments always take longer. Once working, updates are much faster!
+1. **Configure custom domain** (optional)
+2. **Set up monitoring** (UptimeRobot, Pingdom)
+3. **Configure error tracking** (Sentry)
+4. **Set up CI/CD** (GitHub Actions)
+5. **Add SSL certificates** (automatic on both platforms)
+
+## 🔗 Quick Links
+
+- **Backend Health**: https://prism-backend-bwfx.onrender.com/health
+- **Backend API Docs**: https://prism-backend-bwfx.onrender.com/docs
+- **Frontend**: https://frontend-nilukushs-projects.vercel.app
+- **Render Dashboard**: https://dashboard.render.com
+- **Vercel Dashboard**: https://vercel.com/dashboard
