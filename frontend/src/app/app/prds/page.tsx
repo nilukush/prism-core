@@ -240,7 +240,7 @@ export default function PRDsPage() {
                     <span>
                       {doc.creator 
                         ? (doc.creator.full_name || doc.creator.email)
-                        : `User ${doc.creator_id}`
+                        : 'Unknown User'
                       }
                     </span>
                   </div>
