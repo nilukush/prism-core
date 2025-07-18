@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from backend.src.api.deps import get_db
-from backend.src.models.user import User
+from backend.src.models.user import User, UserStatus
 
 router = APIRouter()
 
@@ -33,7 +33,7 @@ async def activate_user_simple(
             return {"error": "User not found", "email": email}
         
         # Update user
-        user.status = "active"
+        user.status = UserStatus.active
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc)
         user.is_active = True
