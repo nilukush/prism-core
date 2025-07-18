@@ -66,11 +66,11 @@ export default function NewProjectPage() {
 
   // Ensure modal shows when no organizations exist
   useEffect(() => {
-    if (!loadingOrgs && organizations.length === 0 && !showCreateOrgModal) {
-      console.log('No orgs detected after loading, forcing modal open')
+    if (!loadingOrgs && organizations.length === 0) {
+      console.log('No orgs detected after loading, showing modal')
       setShowCreateOrgModal(true)
     }
-  }, [loadingOrgs, organizations.length, showCreateOrgModal])
+  }, [loadingOrgs, organizations.length])
 
   const fetchOrganizations = async () => {
     try {
@@ -225,41 +225,20 @@ export default function NewProjectPage() {
     )
   }
 
-  // Show empty state if no organizations
-  if (!loadingOrgs && organizations.length === 0 && !showCreateOrgModal) {
-    console.log('Rendering empty state - orgs:', organizations.length, 'modal:', showCreateOrgModal)
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/app/projects')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Create New Project</h1>
-            <p className="text-muted-foreground">
-              Set up a new project for your team
-            </p>
-          </div>
-        </div>
-
-        <Card className="p-8 text-center">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No Organizations Found</h2>
-          <p className="text-muted-foreground mb-6">
-            You need to create an organization before you can create projects.
-          </p>
-          <Button onClick={() => setShowCreateOrgModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Your First Organization
-          </Button>
-        </Card>
-      </div>
-    )
+  // Show empty state if no organizations - removed the modal check since we always show modal when no orgs
+  if (!loadingOrgs && organizations.length === 0) {
+    console.log('No organizations exist - modal should be open:', showCreateOrgModal)
+    // Don't render empty state, let the modal handle it
   }
+
+  // If we're here, either loading or have organizations
+  if (!loadingOrgs && organizations.length > 0) {
+    // Have organizations, proceed with normal flow
+    console.log('Organizations exist:', organizations.length, '- proceeding with form')
+  }
+
+  return (
+    // Main render
 
   return (
     <>

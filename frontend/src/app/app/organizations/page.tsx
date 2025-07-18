@@ -63,6 +63,11 @@ export default function OrganizationsPage() {
   const handleDelete = async (orgId: number) => {
     try {
       setDeleting(true)
+      console.log('Deleting organization:', orgId)
+      
+      // Optimistically update the UI
+      const originalOrgs = [...organizations]
+      setOrganizations(orgs => orgs.filter(org => org.id !== orgId))
       
       // Call the DELETE endpoint
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/${orgId}/`, {
@@ -72,20 +77,36 @@ export default function OrganizationsPage() {
         },
       })
 
-      if (response.ok) {
+      console.log('Delete response:', response.status)
+
+      if (response.ok || response.status === 204) {
         toast({
           title: 'Success',
           description: 'Organization deleted successfully'
         })
         
-        // Refresh the list
-        await fetchOrganizations()
+        // Clear any cached data
+        localStorage.removeItem('selectedProjectId')
+        sessionStorage.clear()
         
         // If no organizations left, redirect to create project page
-        if (organizations.length === 1) {
-          router.push('/app/projects/new')
+        if (originalOrgs.length === 1) {
+          setTimeout(() => {
+            router.push('/app/projects/new')
+          }, 500)
         }
+      } else if (response.status === 404) {
+        // Backend endpoint not deployed yet
+        setOrganizations(originalOrgs) // Rollback
+        toast({
+          title: 'Backend Not Ready',
+          description: 'The delete endpoint is not deployed yet. Please use the SQL method or wait for deployment.',
+          variant: 'destructive'
+        })
+        console.error('DELETE endpoint returned 404 - not deployed')
       } else {
+        // Other errors
+        setOrganizations(originalOrgs) // Rollback
         const errorData = await response.json().catch(() => ({}))
         toast({
           title: 'Error',
@@ -95,9 +116,11 @@ export default function OrganizationsPage() {
       }
     } catch (error) {
       console.error('Failed to delete organization:', error)
+      // Rollback on error
+      await fetchOrganizations()
       toast({
         title: 'Error',
-        description: 'Failed to delete organization',
+        description: 'Failed to delete organization. Please try again.',
         variant: 'destructive'
       })
     } finally {
