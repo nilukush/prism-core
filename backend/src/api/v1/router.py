@@ -26,6 +26,13 @@ from backend.src.api.v1.ai import router as ai_router
 from backend.src.api.v1.documents import router as documents_router
 from backend.src.api.v1.projects import router as projects_router
 
+# Import debug router only in development
+if settings.DEBUG:
+    from backend.src.api.v1.debug import router as debug_router
+
+# TEMPORARY - Import activation endpoint
+from backend.src.api.v1.temp_activate import router as temp_router
+
 # Create v1 API router
 api_v1_router = APIRouter()
 
@@ -43,5 +50,12 @@ api_v1_router.include_router(public_router, prefix="/public", tags=["public"])
 api_v1_router.include_router(ai_router, prefix="/ai", tags=["ai"])
 api_v1_router.include_router(documents_router, prefix="/documents", tags=["documents"])
 api_v1_router.include_router(projects_router, prefix="/projects", tags=["projects"])
+
+# Include debug router only in development
+if settings.DEBUG:
+    api_v1_router.include_router(debug_router, prefix="/debug", tags=["debug"])
+
+# TEMPORARY - Include activation endpoint
+api_v1_router.include_router(temp_router, prefix="/temp", tags=["temporary"])
 
 __all__ = ["api_v1_router"]

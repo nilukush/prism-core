@@ -33,8 +33,8 @@ services:
         value: https://prism-app.vercel.app
       - key: DEFAULT_LLM_PROVIDER
         value: mock  # Using mock for free tier
-      - key: CORS_ALLOWED_ORIGINS
-        value: https://prism-app.vercel.app,https://prism-frontend.vercel.app,http://localhost:3000
+      - key: CORS_ORIGINS
+        value: https://prism-9z5biinym-nilukushs-projects.vercel.app,https://prism-frontend-kappa.vercel.app,http://localhost:3000,http://localhost:3100
       
     # Build configuration
     buildCommand: docker build -t prism-backend -f Dockerfile --target production .

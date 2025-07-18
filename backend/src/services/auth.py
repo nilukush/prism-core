@@ -322,8 +322,13 @@ class AuthService:
             return None
         
         # Check if account is active
-        if user.status != UserStatus.active:
-            return None
+        # TEMPORARY: Allow pending users in development mode for testing
+        if settings.DEBUG:
+            if user.status not in [UserStatus.active, UserStatus.pending]:
+                return None
+        else:
+            if user.status != UserStatus.active:
+                return None
         
         # Reset failed login attempts
         user.failed_login_attempts = 0

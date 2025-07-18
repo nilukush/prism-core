@@ -77,22 +77,23 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.17 (2025-01-17)
-- **Cloud Deployment Status** 🎆:
-  - **Render Backend**: 
-    - ✅ FULLY OPERATIONAL at https://prism-backend-bwfx.onrender.com
-    - ✅ Vector store warning working as designed (graceful degradation)
-    - ✅ App runs perfectly without Qdrant vector database
-    - ℹ️ Core features work without vector search capabilities
-  - **Vercel Frontend**:
-    - ✅ Successfully deployed to project: `frontend`
-    - ✅ Protection Bypass for Automation AVAILABLE (personal account)
-    - 📝 Next Step: Add bypass token (see VERCEL_BYPASS_SETUP.md)
-    - 🔑 Generated token: `RYILkX2G0Ucmwjb+PtPKkLeO/tIIb43O7G+ya41tLfg=`
-  - **Final Setup**:
-    1. Add the token in Vercel settings
-    2. Access via: `https://frontend-nilukushs-projects.vercel.app?x-vercel-protection-bypass=TOKEN`
-  - **Status**: Both services deployed, just need to save bypass token
+### 📊 Latest Version: 0.14.18 (2025-01-17)
+- **🚀 PRISM IS NOW LIVE!** Public deployment complete:
+  - **Backend (Render)**: 
+    - ✅ Live at: https://prism-backend-bwfx.onrender.com
+    - ✅ Running on free tier (spins down after 15 min inactivity)
+    - ✅ Vector store disabled for free tier (graceful degradation)
+    - ✅ All core features working without vector database
+  - **Frontend (Vercel)**:
+    - ✅ Live at: https://prism-frontend-kappa.vercel.app
+    - ✅ Deployment protection DISABLED - publicly accessible
+    - ✅ Project renamed from `frontend` to `prism-app`
+    - ✅ Alternative URL: https://prism-9z5biinym-nilukushs-projects.vercel.app
+  - **CORS Configuration**:
+    - ✅ Backend accepts requests from both Vercel URLs
+    - ✅ Update `CORS_ORIGINS` in Render if deploying new frontend
+  - **Cost**: $0/month (free tiers)
+  - **For Public Sharing**: Use https://prism-frontend-kappa.vercel.app
 
 ### 📊 Previous Version: 0.14.7 (2025-01-15)
 - **Professional Documentation Update** 📚:

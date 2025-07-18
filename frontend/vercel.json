@@ -8,7 +8,9 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://prism-backend-bwfx.onrender.com",
     "NEXT_PUBLIC_APP_URL": "https://prism-app.vercel.app",
-    "NEXTAUTH_URL": "https://prism-app.vercel.app"
+    "NEXTAUTH_URL": "https://prism-app.vercel.app",
+    "NEXT_PUBLIC_APP_NAME": "PRISM",
+    "NEXT_PUBLIC_APP_DESCRIPTION": "AI-Powered Product Management Platform"
   },
   "headers": [
     {
