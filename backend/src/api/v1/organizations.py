@@ -85,12 +85,12 @@ async def list_organizations(
         )
 
 
-@router.post("/", response_model=OrganizationResponse)
+@router.post("/")
 async def create_organization(
     organization_data: OrganizationCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)]
-) -> OrganizationResponse:
+):
     """
     Create a new organization.
     
@@ -141,7 +141,19 @@ async def create_organization(
             owner_id=current_user.id
         )
         
-        return OrganizationResponse.model_validate(new_org)
+        # Return simple dict to avoid UUID/int mismatch
+        return {
+            "id": new_org.id,
+            "name": new_org.name,
+            "slug": new_org.slug,
+            "description": new_org.description,
+            "plan": new_org.plan.value,
+            "owner_id": new_org.owner_id,
+            "max_users": new_org.max_users,
+            "max_projects": new_org.max_projects,
+            "created_at": new_org.created_at.isoformat() if new_org.created_at else None,
+            "updated_at": new_org.updated_at.isoformat() if new_org.updated_at else None
+        }
         
     except HTTPException:
         raise
@@ -154,11 +166,11 @@ async def create_organization(
         )
 
 
-@router.get("/current", response_model=OrganizationResponse)
+@router.get("/current")
 async def get_current_organization(
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)]
-) -> OrganizationResponse:
+):
     """Get current user's organization."""
     if not current_user.organization_id:
         raise HTTPException(
@@ -177,7 +189,12 @@ async def get_current_organization(
             detail="Organization not found"
         )
     
-    return OrganizationResponse.model_validate(organization)
+    return {
+        "id": organization.id,
+        "name": organization.name,
+        "slug": organization.slug,
+        "plan": organization.plan.value
+    }
 
 
 @router.get("/current/stats", response_model=OrganizationStats)
@@ -212,12 +229,12 @@ async def get_organization_stats(
     )
 
 
-@router.patch("/current", response_model=OrganizationResponse)
+@router.patch("/current")
 async def update_organization(
     organization_update: OrganizationUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)]
-) -> OrganizationResponse:
+):
     """
     Update organization settings.
     
@@ -257,4 +274,10 @@ async def update_organization(
         fields=list(update_data.keys())
     )
     
-    return OrganizationResponse.model_validate(organization)
+    return {
+        "id": organization.id,
+        "name": organization.name,
+        "slug": organization.slug,
+        "plan": organization.plan.value,
+        "updated_at": organization.updated_at.isoformat() if organization.updated_at else None
+    }
