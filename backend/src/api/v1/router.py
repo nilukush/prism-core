@@ -30,8 +30,8 @@ from backend.src.api.v1.projects import router as projects_router
 if settings.DEBUG:
     from backend.src.api.v1.debug import router as debug_router
 
-# TEMPORARY - Import activation endpoint
-from backend.src.api.v1.temp_activate import router as temp_router
+# Import activation endpoint with proper security
+from backend.src.api.v1.activation import router as activation_router
 
 # Create v1 API router
 api_v1_router = APIRouter()
@@ -55,7 +55,11 @@ api_v1_router.include_router(projects_router, prefix="/projects", tags=["project
 if settings.DEBUG:
     api_v1_router.include_router(debug_router, prefix="/debug", tags=["debug"])
 
-# TEMPORARY - Include activation endpoint
-api_v1_router.include_router(temp_router, prefix="/temp", tags=["temporary"])
+# Include activation endpoint with environment-based security
+if settings.ENVIRONMENT in ["development", "local", "staging"] or settings.DEBUG:
+    api_v1_router.include_router(activation_router, prefix="/activation", tags=["activation"])
+else:
+    # In production, only include the main activation endpoint (not dev endpoints)
+    api_v1_router.include_router(activation_router, prefix="/activation", tags=["activation"])
 
 __all__ = ["api_v1_router"]

@@ -3,6 +3,7 @@ Authentication service with JWT and refresh token support.
 Implements enterprise-grade security best practices.
 """
 
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, Tuple
@@ -322,12 +323,29 @@ class AuthService:
             return None
         
         # Check if account is active
-        # TEMPORARY: Allow pending users in development mode for testing
-        if settings.DEBUG:
+        # Development mode: more flexible authentication
+        if settings.ENVIRONMENT in ["development", "local"] or settings.DEBUG:
+            # Allow pending users in development
             if user.status not in [UserStatus.active, UserStatus.pending]:
+                logger.warning(f"User {username} has invalid status: {user.status}")
                 return None
+            
+            # Auto-activate pending users if configured
+            if user.status == UserStatus.pending and os.getenv("AUTO_ACTIVATE_USERS", "false").lower() == "true":
+                logger.info(f"Auto-activating user {username} in development mode")
+                user.status = UserStatus.active
+                user.email_verified = True
+                user.email_verified_at = datetime.now(timezone.utc)
+                user.is_active = True
         else:
+            # Production mode: strict verification
             if user.status != UserStatus.active:
+                logger.warning(f"User {username} attempted login with status: {user.status}")
+                return None
+            
+            # Check email verification in production
+            if not user.email_verified and os.getenv("EMAIL_VERIFICATION_REQUIRED", "true").lower() == "true":
+                logger.warning(f"User {username} attempted login without email verification")
                 return None
         
         # Reset failed login attempts
