@@ -77,7 +77,7 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **PRDs not displaying with Claude**: Frontend timeout (30s) < Claude response time (40-60s) - see v0.14.5
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 
-### 📊 Latest Version: 0.14.20 (2025-01-18)
+### 📊 Latest Version: 0.14.21 (2025-01-18)
 - **🚀 PRISM PRODUCTION DEPLOYMENT** - Active on Vercel, Render, Neon, and Upstash:
   - **Backend (Render)**: 
     - ✅ Live at: https://prism-backend-bwfx.onrender.com
@@ -96,24 +96,17 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
     - ✅ Update `CORS_ORIGINS` in Render if deploying new frontend
   - **Cost**: $0/month (free tiers)
   - **For Public Sharing**: Use https://prism-frontend-kappa.vercel.app
-  - **User Activation Solutions** (Email verification bypass for production):
-    - ✅ Simple activation endpoint: `POST /api/v1/activation/simple/{email}`
-    - ✅ Fixed SQLAlchemy compatibility (removed .returning() clause)
-    - ✅ Works without any token/authentication in production
-    - ✅ Example: `curl -X POST https://prism-backend-bwfx.onrender.com/api/v1/activation/simple/nilukush@gmail.com`
-    - ✅ For other users: Replace email in the URL
-    - ✅ **ACTIVATION ENDPOINT WORKING!** (Fixed 2025-01-18)
-    - 🔧 **Emergency SQL Activation** (use Neon dashboard):
-      ```sql
-      UPDATE users SET status = 'active', email_verified = true, 
-      email_verified_at = NOW(), is_active = true 
-      WHERE email = 'your-email@example.com';
-      ```
-    - ⚠️ Production Environment Variables (Render):
-      - `AUTO_ACTIVATE_USERS=true` - Auto-activates on login attempt
-      - `EMAIL_VERIFICATION_REQUIRED=false` - Already set
-      - `SKIP_EMAIL_VERIFICATION=true` - Skip email sending
-      - DO NOT set `ENVIRONMENT=development` in production!
+  - **User & Organization Flow** (Complete setup working):
+    - ✅ Auto-activation working - no email verification needed
+    - ✅ Organization creation endpoint: `POST /api/v1/organizations/`
+    - ✅ Frontend UI for organization creation added
+    - ✅ Fixed Organization model fields (removed max_workspaces)
+    - ✅ Complete flow: Register → Login → Create Org → Create Project
+    - 🔧 **Required Environment Variables** (all set in Render):
+      - `CORS_ORIGINS=https://prism-frontend-kappa.vercel.app,https://prism-9z5biinym-nilukushs-projects.vercel.app`
+      - `AUTO_ACTIVATE_USERS=true`
+      - `EMAIL_VERIFICATION_REQUIRED=false`
+      - `SKIP_EMAIL_VERIFICATION=true`
 
 ### 📊 Previous Version: 0.14.7 (2025-01-15)
 - **Professional Documentation Update** 📚:

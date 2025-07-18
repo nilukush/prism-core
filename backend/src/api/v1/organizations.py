@@ -112,11 +112,12 @@ async def create_organization(
             name=organization_data.name,
             slug=organization_data.slug,
             description=organization_data.description,
+            email=current_user.email,  # Use owner's email as org email
             plan=organization_data.plan if hasattr(organization_data, 'plan') else OrganizationPlan.FREE,
             owner_id=current_user.id,
             max_users=10,  # Default for free plan
             max_projects=5,  # Default for free plan
-            max_workspaces=3  # Default for free plan
+            max_storage_gb=10  # Default for free plan
         )
         
         db.add(new_org)
