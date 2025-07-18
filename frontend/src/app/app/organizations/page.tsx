@@ -88,7 +88,8 @@ export default function OrganizationsPage() {
       // If no organizations left, redirect to create project page
       if (originalOrgs.length === 1) {
         setTimeout(() => {
-          router.push('/app/projects/new')
+          // Add a timestamp to force refresh on the target page
+          router.push(`/app/projects/new?refresh=${Date.now()}`)
         }, 500)
       }
     } catch (error: any) {

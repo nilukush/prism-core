@@ -5,10 +5,19 @@ import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api-client'
 import { useToast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertCircle, Trash2 } from 'lucide-react'
+import { AlertCircle, Trash2, RefreshCw } from 'lucide-react'
 
 export function FixOrgModal() {
   const { toast } = useToast()
+
+  const handleRefresh = () => {
+    toast({
+      title: 'Refreshing...',
+      description: 'Reloading page to check for organizations',
+    })
+    // Hard refresh to ensure we get fresh data
+    window.location.reload()
+  }
 
   const handleDeleteExistingOrg = async () => {
     try {
@@ -100,7 +109,22 @@ export function FixOrgModal() {
             </div>
 
             <div className="border-t pt-4">
-              <h4 className="font-semibold text-orange-800">Option 2: Delete via Database</h4>
+              <h4 className="font-semibold text-orange-800">Option 2: Refresh Page</h4>
+              <p className="text-sm text-orange-700 mb-2">
+                If you've already deleted the organization elsewhere, refresh to check:
+              </p>
+              <Button 
+                onClick={handleRefresh}
+                variant="outline"
+                className="w-full mb-4"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Page
+              </Button>
+            </div>
+
+            <div className="border-t pt-4">
+              <h4 className="font-semibold text-orange-800">Option 3: Delete via Database</h4>
               <p className="text-sm text-orange-700 mb-2">
                 If the API delete doesn't work (backend not deployed), run this in Neon SQL Editor:
               </p>

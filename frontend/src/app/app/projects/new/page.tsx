@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, Calendar, FolderKanban, Building2, Plus } from 'lucide-react'
 import { FixOrgModal } from './fix-org-modal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -25,6 +25,7 @@ interface Organization {
 
 export default function NewProjectPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const { data: session } = useSession()
   const [loading, setLoading] = useState(false)
@@ -50,11 +51,38 @@ export default function NewProjectPage() {
   })
 
   useEffect(() => {
-    // Add a small delay to ensure component is mounted
-    const timer = setTimeout(() => {
+    // Fetch organizations on mount
+    fetchOrganizations()
+    
+    // If we have a refresh parameter, it means we're coming from a deletion
+    if (searchParams.get('refresh')) {
+      console.log('Refresh parameter detected - ensuring fresh data')
+      // Remove the refresh parameter from URL
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+    }
+  }, [searchParams])
+
+  // Refetch organizations when window gains focus (e.g., after deleting from another tab/page)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('Window gained focus - refetching organizations')
       fetchOrganizations()
-    }, 100)
-    return () => clearTimeout(timer)
+    }
+
+    window.addEventListener('focus', handleFocus)
+    // Also refetch when page becomes visible (handles tab switching)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        console.log('Page became visible - refetching organizations')
+        fetchOrganizations()
+      }
+    })
+
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      document.removeEventListener('visibilitychange', handleFocus)
+    }
   }, [])
 
   // Debug log for modal state
@@ -75,7 +103,9 @@ export default function NewProjectPage() {
   const fetchOrganizations = async () => {
     try {
       setLoadingOrgs(true)
-      console.log('Fetching organizations...')
+      console.log('Fetching organizations...', new Date().toISOString())
+      
+      // Force fresh data by bypassing any potential cache
       const response = await api.organizations.list()
       console.log('Organizations API response:', response)
       console.log('Number of organizations:', response.organizations?.length || 0)
