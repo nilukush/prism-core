@@ -2,22 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Building2, Plus, Users, FolderOpen, Settings } from 'lucide-react'
+import { Building2, Plus, Trash2, Users, FolderKanban, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { api } from '@/lib/api-client'
 import { useToast } from '@/components/ui/use-toast'
-import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface Organization {
   id: number
   name: string
   slug: string
   plan: string
+  max_users: number
   max_projects: number
   is_owner: boolean
 }
@@ -25,16 +34,10 @@ interface Organization {
 export default function OrganizationsPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [loading, setLoading] = useState(true)
   const [organizations, setOrganizations] = useState<Organization[]>([])
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [creating, setCreating] = useState(false)
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    description: ''
-  })
+  const [loading, setLoading] = useState(true)
+  const [deleteOrgId, setDeleteOrgId] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchOrganizations()
@@ -57,54 +60,73 @@ export default function OrganizationsPage() {
     }
   }
 
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .substring(0, 50)
-  }
-
-  const handleCreateOrganization = async () => {
-    if (!formData.name || !formData.slug) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive'
-      })
-      return
-    }
-
+  const handleDelete = async (orgId: number) => {
     try {
-      setCreating(true)
-      await api.organizations.create(formData)
+      setDeleting(true)
       
-      toast({
-        title: 'Success',
-        description: 'Organization created successfully'
+      // Call the DELETE endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/${orgId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
       })
-      
-      // Reset form and refresh list
-      setFormData({ name: '', slug: '', description: '' })
-      setShowCreateModal(false)
-      await fetchOrganizations()
-    } catch (error: any) {
+
+      if (response.ok) {
+        toast({
+          title: 'Success',
+          description: 'Organization deleted successfully'
+        })
+        
+        // Refresh the list
+        await fetchOrganizations()
+        
+        // If no organizations left, redirect to create project page
+        if (organizations.length === 1) {
+          router.push('/app/projects/new')
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        toast({
+          title: 'Error',
+          description: errorData.detail || 'Failed to delete organization',
+          variant: 'destructive'
+        })
+      }
+    } catch (error) {
+      console.error('Failed to delete organization:', error)
       toast({
         title: 'Error',
-        description: error.data?.detail || 'Failed to create organization',
+        description: 'Failed to delete organization',
         variant: 'destructive'
       })
     } finally {
-      setCreating(false)
+      setDeleting(false)
+      setDeleteOrgId(null)
     }
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Loading organizations...</p>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
+            <p className="text-muted-foreground">Manage your organizations</p>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24 mt-2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     )
@@ -116,136 +138,105 @@ export default function OrganizationsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
           <p className="text-muted-foreground">
-            Manage your organizations and teams
+            Manage your organizations and their settings
           </p>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button onClick={() => router.push('/app/projects/new')}>
           <Plus className="mr-2 h-4 w-4" />
           Create Organization
         </Button>
       </div>
 
       {organizations.length === 0 ? (
-        <Card className="p-8 text-center">
+        <Card className="p-12 text-center">
           <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Organizations</h2>
           <p className="text-muted-foreground mb-6">
-            Create your first organization to start managing projects and teams.
+            Create your first organization to start managing projects
           </p>
-          <Button onClick={() => setShowCreateModal(true)}>
+          <Button onClick={() => router.push('/app/projects/new')}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Your First Organization
+            Create Organization
           </Button>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {organizations.map((org) => (
-            <Card 
-              key={org.id} 
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => router.push(`/app/organizations/${org.id}`)}
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <CardTitle>{org.name}</CardTitle>
-                    <CardDescription>{org.slug}</CardDescription>
+        <>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Organization Management</AlertTitle>
+            <AlertDescription>
+              You can only delete organizations that you own. Deleting an organization will permanently remove all associated projects and data.
+            </AlertDescription>
+          </Alert>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {organizations.map((org) => (
+              <Card key={org.id} className="relative">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">{org.name}</CardTitle>
+                      <CardDescription>{org.slug}</CardDescription>
+                    </div>
+                    <Badge variant={org.plan === 'free' ? 'secondary' : 'default'}>
+                      {org.plan}
+                    </Badge>
                   </div>
-                  <div className="flex gap-2">
-                    {org.is_owner && (
-                      <Badge variant="secondary">Owner</Badge>
-                    )}
-                    <Badge variant="outline">{org.plan}</Badge>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
-                      <FolderOpen className="h-4 w-4 text-muted-foreground" />
-                      <span>{org.max_projects} projects</span>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Users className="h-4 w-4" />
+                      <span>Up to {org.max_users} users</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <FolderKanban className="h-4 w-4" />
+                      <span>Up to {org.max_projects} projects</span>
                     </div>
                   </div>
+                  
                   {org.is_owner && (
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <Settings className="h-4 w-4" />
-                    </Button>
+                    <div className="mt-4 pt-4 border-t">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setDeleteOrgId(org.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Organization
+                      </Button>
+                    </div>
                   )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Create Organization Modal */}
-      <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Create Organization</DialogTitle>
-            <DialogDescription>
-              Create a new organization to manage your projects and team members.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Organization Name *</Label>
-              <Input
-                id="name"
-                placeholder="e.g., My Company"
-                value={formData.name}
-                onChange={(e) => {
-                  const name = e.target.value
-                  setFormData(prev => ({
-                    ...prev,
-                    name,
-                    slug: generateSlug(name)
-                  }))
-                }}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="slug">URL Slug *</Label>
-              <Input
-                id="slug"
-                placeholder="e.g., my-company"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                pattern="[a-z0-9-]+"
-              />
-              <p className="text-sm text-muted-foreground">
-                This will be used in URLs and must be unique
-              </p>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="What does your organization do?"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateModal(false)}
-              disabled={creating}
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteOrgId !== null} onOpenChange={() => setDeleteOrgId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the organization
+              and all associated projects, documents, and data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteOrgId && handleDelete(deleteOrgId)}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateOrganization}
-              disabled={creating || !formData.name || !formData.slug}
-            >
-              {creating ? 'Creating...' : 'Create Organization'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {deleting ? 'Deleting...' : 'Delete Organization'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

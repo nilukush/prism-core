@@ -17,6 +17,7 @@ import {
   Zap,
   FileText,
   Users,
+  Building2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -37,6 +38,7 @@ import { ProjectSelector } from '@/components/project-selector'
 const navigation = [
   { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
   { name: 'Projects', href: '/app/projects', icon: FolderKanban },
+  { name: 'Organizations', href: '/app/organizations', icon: Building2 },
   { name: 'Backlog', href: '/app/backlog', icon: ListTodo },
   { name: 'Sprints', href: '/app/sprints', icon: Zap },
   { name: 'PRDs', href: '/app/prds', icon: FileText },
