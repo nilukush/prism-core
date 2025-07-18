@@ -49,21 +49,54 @@ export default function NewProjectPage() {
   })
 
   useEffect(() => {
-    fetchOrganizations()
+    // Add a small delay to ensure component is mounted
+    const timer = setTimeout(() => {
+      fetchOrganizations()
+    }, 100)
+    return () => clearTimeout(timer)
   }, [])
+
+  // Debug log for modal state
+  useEffect(() => {
+    console.log('showCreateOrgModal state:', showCreateOrgModal)
+    console.log('organizations:', organizations)
+    console.log('loadingOrgs:', loadingOrgs)
+  }, [showCreateOrgModal, organizations, loadingOrgs])
+
+  // Ensure modal shows when no organizations exist
+  useEffect(() => {
+    if (!loadingOrgs && organizations.length === 0 && !showCreateOrgModal) {
+      console.log('No orgs detected after loading, forcing modal open')
+      setShowCreateOrgModal(true)
+    }
+  }, [loadingOrgs, organizations.length, showCreateOrgModal])
 
   const fetchOrganizations = async () => {
     try {
       setLoadingOrgs(true)
+      console.log('Fetching organizations...')
       const response = await api.organizations.list()
+      console.log('Organizations API response:', response)
+      console.log('Number of organizations:', response.organizations?.length || 0)
       
-      if (response.organizations.length === 0) {
+      // Check if organizations is actually an array
+      const orgs = response.organizations || []
+      console.log('Organizations array:', orgs, 'Is Array:', Array.isArray(orgs))
+      
+      // Filter out any invalid organizations
+      const validOrgs = orgs.filter((org: any) => org && org.id && org.name)
+      console.log('Valid organizations after filtering:', validOrgs)
+      
+      if (validOrgs.length === 0) {
         // No organizations exist - show create organization UI
+        console.log('No valid organizations found, showing create modal')
         setShowCreateOrgModal(true)
+        setOrganizations([])
       } else {
-        setOrganizations(response.organizations)
+        console.log('Valid organizations found:', validOrgs)
+        setOrganizations(validOrgs)
         // Set the first organization as default
-        setFormData(prev => ({ ...prev, organization_id: response.organizations[0].id.toString() }))
+        setFormData(prev => ({ ...prev, organization_id: validOrgs[0].id.toString() }))
       }
     } catch (error) {
       console.error('Failed to fetch organizations:', error)
@@ -193,6 +226,7 @@ export default function NewProjectPage() {
 
   // Show empty state if no organizations
   if (!loadingOrgs && organizations.length === 0 && !showCreateOrgModal) {
+    console.log('Rendering empty state - orgs:', organizations.length, 'modal:', showCreateOrgModal)
     return (
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
@@ -227,7 +261,39 @@ export default function NewProjectPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <>
+      <div className="max-w-2xl mx-auto space-y-6">
+      {/* Debug button - remove after testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="p-4 border border-dashed border-red-500 rounded mb-4">
+          <p className="text-sm text-red-600 mb-2">Debug Controls (Dev Only)</p>
+          <div className="flex gap-2">
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => setShowCreateOrgModal(true)}
+            >
+              Force Show Modal
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => {
+                setOrganizations([])
+                setShowCreateOrgModal(true)
+              }}
+            >
+              Clear Orgs & Show Modal
+            </Button>
+          </div>
+          <p className="text-xs mt-2">
+            Modal: {showCreateOrgModal ? 'OPEN' : 'CLOSED'} | 
+            Orgs: {organizations.length} | 
+            Loading: {loadingOrgs ? 'YES' : 'NO'}
+          </p>
+        </div>
+      )}
+      
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -389,9 +455,16 @@ export default function NewProjectPage() {
           </Button>
         </div>
       </form>
+      </div>
 
-      {/* Create Organization Modal */}
-      <Dialog open={showCreateOrgModal} onOpenChange={setShowCreateOrgModal}>
+      {/* Create Organization Modal - Always render at root level */}
+      <Dialog 
+        open={showCreateOrgModal} 
+        onOpenChange={(open) => {
+          console.log('Root Dialog onOpenChange called with:', open)
+          setShowCreateOrgModal(open)
+        }}
+      >
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Create Your First Organization</DialogTitle>
@@ -401,9 +474,9 @@ export default function NewProjectPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="org-name">Organization Name *</Label>
+              <Label htmlFor="org-name-root">Organization Name *</Label>
               <Input
-                id="org-name"
+                id="org-name-root"
                 placeholder="e.g., My Company"
                 value={orgFormData.name}
                 onChange={(e) => {
@@ -417,9 +490,9 @@ export default function NewProjectPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="org-slug">URL Slug *</Label>
+              <Label htmlFor="org-slug-root">URL Slug *</Label>
               <Input
-                id="org-slug"
+                id="org-slug-root"
                 placeholder="e.g., my-company"
                 value={orgFormData.slug}
                 onChange={(e) => setOrgFormData(prev => ({ ...prev, slug: e.target.value }))}
@@ -430,9 +503,9 @@ export default function NewProjectPage() {
               </p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="org-description">Description</Label>
+              <Label htmlFor="org-description-root">Description</Label>
               <Textarea
-                id="org-description"
+                id="org-description-root"
                 placeholder="What does your organization do?"
                 value={orgFormData.description}
                 onChange={(e) => setOrgFormData(prev => ({ ...prev, description: e.target.value }))}
@@ -460,6 +533,6 @@ export default function NewProjectPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

@@ -3,7 +3,7 @@ Organization management API endpoints.
 """
 
 from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload
@@ -281,3 +281,47 @@ async def update_organization(
         "plan": organization.plan.value,
         "updated_at": organization.updated_at.isoformat() if organization.updated_at else None
     }
+
+
+@router.delete("/{organization_id}")
+async def delete_organization(
+    organization_id: int,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
+):
+    """
+    Delete an organization.
+    
+    Only the organization owner can delete it.
+    This will cascade delete all related data (projects, members, etc.)
+    """
+    # Check if organization exists and user is owner
+    result = await db.execute(
+        select(Organization).where(Organization.id == organization_id)
+    )
+    organization = result.scalar_one_or_none()
+    
+    if not organization:
+        # Return 204 for idempotent delete (organization already deleted)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
+    # Check if user is the owner
+    if organization.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the organization owner can delete it"
+        )
+    
+    # Log the deletion
+    logger.warning(
+        "organization_deletion",
+        organization_id=organization_id,
+        organization_slug=organization.slug,
+        deleted_by=current_user.id
+    )
+    
+    # Delete the organization (cascade will handle related data)
+    await db.delete(organization)
+    await db.commit()
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
