@@ -21,6 +21,7 @@ from backend.src.schemas.organization import (
     OrganizationStats
 )
 from backend.src.schemas.common import SortDirection
+from backend.src.models.organization import OrganizationPlan
 import logging
 
 logger = logging.getLogger(__name__)
@@ -81,6 +82,74 @@ async def list_organizations(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list organizations: {str(e)}"
+        )
+
+
+@router.post("/", response_model=OrganizationResponse)
+async def create_organization(
+    organization_data: OrganizationCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)]
+) -> OrganizationResponse:
+    """
+    Create a new organization.
+    
+    The current user will be set as the owner and added as an admin member.
+    """
+    try:
+        # Check if slug already exists
+        existing = await db.execute(
+            select(Organization).where(Organization.slug == organization_data.slug)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Organization with slug '{organization_data.slug}' already exists"
+            )
+        
+        # Create organization
+        new_org = Organization(
+            name=organization_data.name,
+            slug=organization_data.slug,
+            description=organization_data.description,
+            plan=organization_data.plan if hasattr(organization_data, 'plan') else OrganizationPlan.FREE,
+            owner_id=current_user.id,
+            max_users=10,  # Default for free plan
+            max_projects=5,  # Default for free plan
+            max_workspaces=3  # Default for free plan
+        )
+        
+        db.add(new_org)
+        await db.flush()  # Get the ID without committing
+        
+        # Add the owner as an admin member
+        org_member = OrganizationMember(
+            organization_id=new_org.id,
+            user_id=current_user.id,
+            role="admin"
+        )
+        db.add(org_member)
+        
+        await db.commit()
+        await db.refresh(new_org)
+        
+        logger.info(
+            "organization_created",
+            organization_id=new_org.id,
+            slug=new_org.slug,
+            owner_id=current_user.id
+        )
+        
+        return OrganizationResponse.model_validate(new_org)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("create_organization_failed", error=str(e), user_id=current_user.id)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create organization: {str(e)}"
         )
 
 
