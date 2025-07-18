@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Calendar, FolderKanban, Building2, Plus } from 'lucide-react'
+import { FixOrgModal } from './fix-org-modal'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -263,6 +264,11 @@ export default function NewProjectPage() {
   return (
     <>
       <div className="max-w-2xl mx-auto space-y-6">
+      {/* Show fix component if organizations exist but modal isn't showing */}
+      {organizations.length > 0 && !showCreateOrgModal && (
+        <FixOrgModal />
+      )}
+      
       {/* Debug button - remove after testing */}
       {process.env.NODE_ENV === 'development' && (
         <div className="p-4 border border-dashed border-red-500 rounded mb-4">
