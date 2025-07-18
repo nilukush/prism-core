@@ -237,9 +237,7 @@ export default function NewProjectPage() {
     console.log('Organizations exist:', organizations.length, '- proceeding with form')
   }
 
-  return (
-    // Main render
-
+  // Main render
   return (
     <>
       <div className="max-w-2xl mx-auto space-y-6">

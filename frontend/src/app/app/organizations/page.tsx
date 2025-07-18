@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Building2, Plus, Trash2, Users, FolderKanban, AlertCircle } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -34,6 +35,7 @@ interface Organization {
 export default function OrganizationsPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { data: session } = useSession()
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loading, setLoading] = useState(true)
   const [deleteOrgId, setDeleteOrgId] = useState<number | null>(null)
@@ -69,60 +71,60 @@ export default function OrganizationsPage() {
       const originalOrgs = [...organizations]
       setOrganizations(orgs => orgs.filter(org => org.id !== orgId))
       
-      // Call the DELETE endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/${orgId}/`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
+      // Use the API client which handles auth properly
+      await api.organizations.delete(orgId)
+      console.log('Organization deleted successfully')
+      
+      // Success - the optimistic update was correct
+      toast({
+        title: 'Success',
+        description: 'Organization deleted successfully'
       })
-
-      console.log('Delete response:', response.status)
-
-      if (response.ok || response.status === 204) {
-        toast({
-          title: 'Success',
-          description: 'Organization deleted successfully'
-        })
-        
-        // Clear any cached data
-        localStorage.removeItem('selectedProjectId')
-        sessionStorage.clear()
-        
-        // If no organizations left, redirect to create project page
-        if (originalOrgs.length === 1) {
-          setTimeout(() => {
-            router.push('/app/projects/new')
-          }, 500)
-        }
-      } else if (response.status === 404) {
-        // Backend endpoint not deployed yet
-        setOrganizations(originalOrgs) // Rollback
+      
+      // Clear any cached data
+      localStorage.removeItem('selectedProjectId')
+      sessionStorage.clear()
+      
+      // If no organizations left, redirect to create project page
+      if (originalOrgs.length === 1) {
+        setTimeout(() => {
+          router.push('/app/projects/new')
+        }, 500)
+      }
+    } catch (error: any) {
+      // Rollback on error
+      setOrganizations(organizations)
+      console.error('Delete error:', error)
+      
+      // Refresh to get current state
+      await fetchOrganizations()
+      
+      if (error.status === 404) {
         toast({
           title: 'Backend Not Ready',
           description: 'The delete endpoint is not deployed yet. Please use the SQL method or wait for deployment.',
           variant: 'destructive'
         })
-        console.error('DELETE endpoint returned 404 - not deployed')
+      } else if (error.status === 401) {
+        toast({
+          title: 'Authentication Error',
+          description: 'Your session has expired. Please login again.',
+          variant: 'destructive'
+        })
+        setTimeout(() => router.push('/auth/login'), 1000)
+      } else if (error.status === 403) {
+        toast({
+          title: 'Permission Denied',
+          description: 'You do not have permission to delete this organization.',
+          variant: 'destructive'
+        })
       } else {
-        // Other errors
-        setOrganizations(originalOrgs) // Rollback
-        const errorData = await response.json().catch(() => ({}))
         toast({
           title: 'Error',
-          description: errorData.detail || 'Failed to delete organization',
+          description: error.data?.detail || error.message || 'Failed to delete organization',
           variant: 'destructive'
         })
       }
-    } catch (error) {
-      console.error('Failed to delete organization:', error)
-      // Rollback on error
-      await fetchOrganizations()
-      toast({
-        title: 'Error',
-        description: 'Failed to delete organization. Please try again.',
-        variant: 'destructive'
-      })
     } finally {
       setDeleting(false)
       setDeleteOrgId(null)

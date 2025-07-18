@@ -23,40 +23,22 @@ export function FixOrgModal() {
           description: `Attempting to delete "${org.name}"`,
         })
 
-        // Try to delete using fetch directly
-        const deleteResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/organizations/${org.id}/`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        )
-
-        if (deleteResponse.ok || deleteResponse.status === 204) {
-          toast({
-            title: 'Success!',
-            description: 'Organization deleted. Refreshing page...',
-          })
-          
-          // Clear any cached data
-          localStorage.removeItem('selectedProjectId')
-          sessionStorage.clear()
-          
-          // Reload the page
-          setTimeout(() => {
-            window.location.reload()
-          }, 1000)
-        } else if (deleteResponse.status === 404) {
-          toast({
-            title: 'Backend not ready',
-            description: 'DELETE endpoint not deployed yet. Please use the SQL method below.',
-            variant: 'destructive'
-          })
-        } else {
-          throw new Error(`Failed to delete: ${deleteResponse.status}`)
-        }
+        // Use the API client for proper authentication
+        await api.organizations.delete(org.id)
+        
+        toast({
+          title: 'Success!',
+          description: 'Organization deleted. Refreshing page...',
+        })
+        
+        // Clear any cached data
+        localStorage.removeItem('selectedProjectId')
+        sessionStorage.clear()
+        
+        // Reload the page
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       } else {
         toast({
           title: 'No organizations found',
