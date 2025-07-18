@@ -98,9 +98,17 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
   - **For Public Sharing**: Use https://prism-frontend-kappa.vercel.app
   - **User Activation Solutions** (Email verification bypass for production):
     - ✅ Simple activation endpoint: `POST /api/v1/activation/simple/{email}`
+    - ✅ Fixed SQLAlchemy compatibility (removed .returning() clause)
     - ✅ Works without any token/authentication in production
     - ✅ Example: `curl -X POST https://prism-backend-bwfx.onrender.com/api/v1/activation/simple/nilukush@gmail.com`
     - ✅ For other users: Replace email in the URL
+    - ✅ **ACTIVATION ENDPOINT WORKING!** (Fixed 2025-01-18)
+    - 🔧 **Emergency SQL Activation** (use Neon dashboard):
+      ```sql
+      UPDATE users SET status = 'active', email_verified = true, 
+      email_verified_at = NOW(), is_active = true 
+      WHERE email = 'your-email@example.com';
+      ```
     - ⚠️ Production Environment Variables (Render):
       - `AUTO_ACTIVATE_USERS=true` - Auto-activates on login attempt
       - `EMAIL_VERIFICATION_REQUIRED=false` - Already set

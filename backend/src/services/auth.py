@@ -336,14 +336,23 @@ class AuthService:
                 user.status = UserStatus.active
                 user.email_verified = True
                 user.email_verified_at = datetime.now(timezone.utc)
-                user.is_active = True
+                # Note: is_active is computed property, don't set directly
         else:
-            # Production mode: strict verification
+            # Production mode with configurable activation
+            # Auto-activate if enabled (works in production too)
+            if user.status == UserStatus.pending and os.getenv("AUTO_ACTIVATE_USERS", "false").lower() == "true":
+                logger.info(f"Auto-activating user {username} (AUTO_ACTIVATE_USERS enabled)")
+                user.status = UserStatus.active
+                user.email_verified = True
+                user.email_verified_at = datetime.now(timezone.utc)
+                # Note: is_active is computed, don't set directly
+            
+            # Check user status after potential auto-activation
             if user.status != UserStatus.active:
                 logger.warning(f"User {username} attempted login with status: {user.status}")
                 return None
             
-            # Check email verification in production
+            # Check email verification in production (if still required)
             if not user.email_verified and os.getenv("EMAIL_VERIFICATION_REQUIRED", "true").lower() == "true":
                 logger.warning(f"User {username} attempted login without email verification")
                 return None

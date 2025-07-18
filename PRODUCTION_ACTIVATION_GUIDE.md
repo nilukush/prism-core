@@ -25,7 +25,7 @@ AUTO_ACTIVATE_USERS=true
 
 This will automatically activate pending users when they attempt to login.
 
-### 2. Simple Activation Endpoint
+### 2. Simple Activation Endpoint (Fixed!)
 
 Activate any user immediately:
 ```bash
@@ -37,6 +37,7 @@ This endpoint:
 - Updates user status to 'active'
 - Sets email_verified = true
 - Returns success/error message
+- **Fixed SQLAlchemy compatibility issue** (removed .returning() clause)
 
 ### 3. Direct Database Update (Emergency)
 
