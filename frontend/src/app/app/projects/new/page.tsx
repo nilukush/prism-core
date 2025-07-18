@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Calendar, FolderKanban, Building2 } from 'lucide-react'
+import { ArrowLeft, Calendar, FolderKanban, Building2, Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { api } from '@/lib/api-client'
 import { useToast } from '@/components/ui/use-toast'
 import { useSession } from 'next-auth/react'
@@ -28,6 +29,8 @@ export default function NewProjectPage() {
   const [loading, setLoading] = useState(false)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
+  const [showCreateOrgModal, setShowCreateOrgModal] = useState(false)
+  const [creatingOrg, setCreatingOrg] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
@@ -37,6 +40,12 @@ export default function NewProjectPage() {
     organization_id: '',
     start_date: '',
     target_end_date: ''
+  })
+
+  const [orgFormData, setOrgFormData] = useState({
+    name: '',
+    slug: '',
+    description: ''
   })
 
   useEffect(() => {
@@ -49,16 +58,8 @@ export default function NewProjectPage() {
       const response = await api.organizations.list()
       
       if (response.organizations.length === 0) {
-        // If no organizations, create a default one
-        const defaultOrg: Organization = {
-          id: 1,
-          name: 'Personal Organization',
-          slug: 'personal',
-          plan: 'free',
-          max_projects: 5
-        }
-        setOrganizations([defaultOrg])
-        setFormData(prev => ({ ...prev, organization_id: '1' }))
+        // No organizations exist - show create organization UI
+        setShowCreateOrgModal(true)
       } else {
         setOrganizations(response.organizations)
         // Set the first organization as default
@@ -66,16 +67,11 @@ export default function NewProjectPage() {
       }
     } catch (error) {
       console.error('Failed to fetch organizations:', error)
-      // Fallback to default org if API fails
-      const defaultOrg: Organization = {
-        id: 1,
-        name: 'Personal Organization',
-        slug: 'personal',
-        plan: 'free',
-        max_projects: 5
-      }
-      setOrganizations([defaultOrg])
-      setFormData(prev => ({ ...prev, organization_id: '1' }))
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch organizations. Please try again.',
+        variant: 'destructive'
+      })
     } finally {
       setLoadingOrgs(false)
     }
@@ -92,6 +88,14 @@ export default function NewProjectPage() {
       .join('')
       .substring(0, 4)
       .toUpperCase()
+  }
+
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 50)
   }
 
   const handleNameChange = (name: string) => {
@@ -149,6 +153,33 @@ export default function NewProjectPage() {
     }
   }
 
+  const handleCreateOrganization = async (orgData: { name: string; slug: string; description: string }) => {
+    try {
+      setCreatingOrg(true)
+      const newOrg = await api.organizations.create(orgData)
+      
+      toast({
+        title: 'Success',
+        description: 'Organization created successfully'
+      })
+      
+      // Refresh organizations list
+      await fetchOrganizations()
+      setShowCreateOrgModal(false)
+      
+      // Select the newly created organization
+      setFormData(prev => ({ ...prev, organization_id: newOrg.id.toString() }))
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.data?.detail || 'Failed to create organization',
+        variant: 'destructive'
+      })
+    } finally {
+      setCreatingOrg(false)
+    }
+  }
+
   if (loadingOrgs) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -156,6 +187,41 @@ export default function NewProjectPage() {
           <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4 animate-pulse" />
           <p className="text-muted-foreground">Loading organizations...</p>
         </div>
+      </div>
+    )
+  }
+
+  // Show empty state if no organizations
+  if (!loadingOrgs && organizations.length === 0 && !showCreateOrgModal) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/app/projects')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Create New Project</h1>
+            <p className="text-muted-foreground">
+              Set up a new project for your team
+            </p>
+          </div>
+        </div>
+
+        <Card className="p-8 text-center">
+          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Organizations Found</h2>
+          <p className="text-muted-foreground mb-6">
+            You need to create an organization before you can create projects.
+          </p>
+          <Button onClick={() => setShowCreateOrgModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Your First Organization
+          </Button>
+        </Card>
       </div>
     )
   }
@@ -243,6 +309,17 @@ export default function NewProjectPage() {
                         {org.name}
                       </SelectItem>
                     ))}
+                    <div className="px-2 py-1.5 border-t">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start"
+                        onClick={() => setShowCreateOrgModal(true)}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create New Organization
+                      </Button>
+                    </div>
                   </SelectContent>
                 </Select>
               </div>
@@ -312,6 +389,77 @@ export default function NewProjectPage() {
           </Button>
         </div>
       </form>
+
+      {/* Create Organization Modal */}
+      <Dialog open={showCreateOrgModal} onOpenChange={setShowCreateOrgModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create Your First Organization</DialogTitle>
+            <DialogDescription>
+              You need to create an organization before you can create projects. Organizations help you manage teams and projects.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="org-name">Organization Name *</Label>
+              <Input
+                id="org-name"
+                placeholder="e.g., My Company"
+                value={orgFormData.name}
+                onChange={(e) => {
+                  const name = e.target.value
+                  setOrgFormData(prev => ({
+                    ...prev,
+                    name,
+                    slug: generateSlug(name)
+                  }))
+                }}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="org-slug">URL Slug *</Label>
+              <Input
+                id="org-slug"
+                placeholder="e.g., my-company"
+                value={orgFormData.slug}
+                onChange={(e) => setOrgFormData(prev => ({ ...prev, slug: e.target.value }))}
+                pattern="^[a-z0-9-]+$"
+              />
+              <p className="text-sm text-muted-foreground">
+                This will be used in URLs and must be unique
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="org-description">Description</Label>
+              <Textarea
+                id="org-description"
+                placeholder="What does your organization do?"
+                value={orgFormData.description}
+                onChange={(e) => setOrgFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreateOrgModal(false)
+                router.push('/app/dashboard')
+              }}
+              disabled={creatingOrg}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => handleCreateOrganization(orgFormData)}
+              disabled={creatingOrg || !orgFormData.name || !orgFormData.slug}
+            >
+              {creatingOrg ? 'Creating...' : 'Create Organization'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
