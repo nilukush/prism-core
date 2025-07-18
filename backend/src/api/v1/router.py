@@ -32,6 +32,8 @@ if settings.DEBUG:
 
 # Import activation endpoint with proper security
 from backend.src.api.v1.activation import router as activation_router
+# Simple activation for production issues
+from backend.src.api.v1.simple_activation import router as simple_activation_router
 
 # Create v1 API router
 api_v1_router = APIRouter()
@@ -61,5 +63,8 @@ if settings.ENVIRONMENT in ["development", "local", "staging"] or settings.DEBUG
 else:
     # In production, only include the main activation endpoint (not dev endpoints)
     api_v1_router.include_router(activation_router, prefix="/activation", tags=["activation"])
+
+# Always include simple activation endpoint
+api_v1_router.include_router(simple_activation_router, prefix="/activation", tags=["activation"])
 
 __all__ = ["api_v1_router"]

@@ -3,16 +3,17 @@ User activation endpoints for development and testing.
 Provides a way to activate users when email verification is not configured.
 """
 import os
+from datetime import datetime, timezone
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import Optional
 
 from backend.src.api.deps import get_db
 from backend.src.models.user import User, UserStatus
 from backend.src.core.logging import get_logger
 from backend.src.core.config import settings
-from datetime import datetime, timezone
 
 logger = get_logger(__name__)
 router = APIRouter()
