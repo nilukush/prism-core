@@ -423,7 +423,7 @@ export default function NewProjectPage() {
                 placeholder="e.g., my-company"
                 value={orgFormData.slug}
                 onChange={(e) => setOrgFormData(prev => ({ ...prev, slug: e.target.value }))}
-                pattern="^[a-z0-9-]+$"
+                pattern="[a-z0-9-]+"
               />
               <p className="text-sm text-muted-foreground">
                 This will be used in URLs and must be unique

@@ -22,9 +22,9 @@ from backend.src.schemas.organization import (
 )
 from backend.src.schemas.common import SortDirection
 from backend.src.models.organization import OrganizationPlan
-import logging
+from backend.src.core.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 router = APIRouter()
 
 
