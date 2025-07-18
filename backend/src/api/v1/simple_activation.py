@@ -36,7 +36,7 @@ async def activate_user_simple(
         user.status = UserStatus.active
         user.email_verified = True
         user.email_verified_at = datetime.now(timezone.utc)
-        user.is_active = True
+        # Note: is_active is a computed property, don't set it directly
         
         await db.commit()
         
