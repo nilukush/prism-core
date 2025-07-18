@@ -23,22 +23,20 @@ async def activate_user_simple(
     For production use with email verification issues.
     """
     try:
-        # Update user directly
+        # First check if user exists
         result = await db.execute(
-            update(User)
-            .where(User.email == email)
-            .values(
-                status="active",
-                email_verified=True,
-                email_verified_at=datetime.now(timezone.utc),
-                is_active=True
-            )
-            .returning(User.id, User.email)
+            select(User).where(User.email == email)
         )
+        user = result.scalar_one_or_none()
         
-        updated = result.first()
-        if not updated:
+        if not user:
             return {"error": "User not found", "email": email}
+        
+        # Update user
+        user.status = "active"
+        user.email_verified = True
+        user.email_verified_at = datetime.now(timezone.utc)
+        user.is_active = True
         
         await db.commit()
         
