@@ -2,7 +2,7 @@
 # Following enterprise best practices for security and efficiency
 
 # Stage 1: Python dependencies builder
-FROM python:3.12-slim as python-deps
+FROM python:3.13-slim as python-deps
 
 # Install system dependencies for building Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -54,7 +54,7 @@ RUN poetry config virtualenvs.create false \
 # RUN npm run build
 
 # Stage 3: Final production image
-FROM python:3.12-slim as production
+FROM python:3.13-slim as production
 
 # Security: Create non-root user
 RUN groupadd -r prism && useradd -r -g prism prism
