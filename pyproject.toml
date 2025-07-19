@@ -52,7 +52,7 @@ opentelemetry-exporter-otlp = "^1.22.0"
 opentelemetry-instrumentation-httpx = "^0.43b0"
 opentelemetry-instrumentation-redis = "^0.43b0"
 opentelemetry-instrumentation-sqlalchemy = "^0.43b0"
-sentry-sdk = {extras = ["fastapi"], version = "^1.40.0"}
+sentry-sdk = {extras = ["fastapi"], version = "^2.33.0"}
 tenacity = "^8.2.3"
 python-dotenv = "^1.0.0"
 orjson = "^3.9.10"
