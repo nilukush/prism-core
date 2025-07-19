@@ -4,12 +4,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import {
-  Bot,
-  Briefcase,
   LayoutDashboard,
   LogOut,
   Settings,
   User,
+  UserCircle,
   Menu,
   X,
   FolderKanban,
@@ -38,11 +37,11 @@ import { ProjectSelector } from '@/components/project-selector'
 const navigation = [
   { name: 'Dashboard', href: '/app/dashboard', icon: LayoutDashboard },
   { name: 'Projects', href: '/app/projects', icon: FolderKanban },
-  { name: 'Organizations', href: '/app/organizations', icon: Building2 },
   { name: 'Backlog', href: '/app/backlog', icon: ListTodo },
   { name: 'Sprints', href: '/app/sprints', icon: Zap },
   { name: 'PRDs', href: '/app/prds', icon: FileText },
   { name: 'Teams', href: '/app/teams', icon: Users },
+  { name: 'Account', href: '/app/account', icon: UserCircle },
   { name: 'Settings', href: '/app/settings', icon: Settings },
 ]
 
@@ -212,6 +211,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/app/account">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Account Overview
+                    </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/app/settings/profile">
                       <User className="mr-2 h-4 w-4" />

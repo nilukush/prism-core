@@ -7,6 +7,9 @@ import { useToast } from '@/components/ui/use-toast'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertCircle, Trash2, RefreshCw } from 'lucide-react'
 
+// Only show debug features in development
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 export function FixOrgModal() {
   const { toast } = useToast()
 
@@ -65,14 +68,16 @@ export function FixOrgModal() {
   }
 
   useEffect(() => {
-    // Log the current state for debugging
-    api.organizations.list().then(response => {
-      console.log('Current organizations:', response)
-      if (response.organizations && response.organizations.length > 0) {
-        console.log('Organization exists - this is why modal is not showing')
-        console.log('Organization details:', response.organizations[0])
-      }
-    }).catch(console.error)
+    // Log the current state for debugging (only in development)
+    if (isDevelopment) {
+      api.organizations.list().then(response => {
+        console.log('Current organizations:', response)
+        if (response.organizations && response.organizations.length > 0) {
+          console.log('Organization exists - this is why modal is not showing')
+          console.log('Organization details:', response.organizations[0])
+        }
+      }).catch(console.error)
+    }
   }, [])
 
   return (
@@ -94,24 +99,30 @@ export function FixOrgModal() {
           
           <div className="space-y-4">
             <div>
-              <h4 className="font-semibold text-orange-800">Option 1: Delete via API</h4>
+              <h4 className="font-semibold text-orange-800">Organization Already Exists</h4>
               <p className="text-sm text-orange-700 mb-2">
-                Click the button below to delete the existing organization:
+                {isDevelopment ? (
+                  <>Click the button below to delete the existing organization:</>
+                ) : (
+                  <>Please contact your administrator to resolve this issue.</>
+                )}
               </p>
-              <Button 
-                onClick={handleDeleteExistingOrg}
-                variant="destructive"
-                className="w-full"
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Existing Organization
-              </Button>
+              {isDevelopment && (
+                <Button 
+                  onClick={handleDeleteExistingOrg}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Existing Organization
+                </Button>
+              )}
             </div>
 
             <div className="border-t pt-4">
-              <h4 className="font-semibold text-orange-800">Option 2: Refresh Page</h4>
+              <h4 className="font-semibold text-orange-800">Try Refreshing</h4>
               <p className="text-sm text-orange-700 mb-2">
-                If you've already deleted the organization elsewhere, refresh to check:
+                If this issue persists, try refreshing the page:
               </p>
               <Button 
                 onClick={handleRefresh}
@@ -123,12 +134,13 @@ export function FixOrgModal() {
               </Button>
             </div>
 
-            <div className="border-t pt-4">
-              <h4 className="font-semibold text-orange-800">Option 3: Delete via Database</h4>
-              <p className="text-sm text-orange-700 mb-2">
-                If the API delete doesn't work (backend not deployed), run this in Neon SQL Editor:
-              </p>
-              <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
+            {isDevelopment && (
+              <div className="border-t pt-4">
+                <h4 className="font-semibold text-orange-800">Option 3: Delete via Database (Dev Only)</h4>
+                <p className="text-sm text-orange-700 mb-2">
+                  If the API delete doesn't work (backend not deployed), run this in Neon SQL Editor:
+                </p>
+                <pre className="bg-gray-900 text-gray-100 p-3 rounded text-xs overflow-x-auto">
 {`-- Delete all organization data
 DELETE FROM documents WHERE project_id IN 
   (SELECT id FROM projects WHERE organization_id = 1);
@@ -137,8 +149,9 @@ DELETE FROM project_members WHERE project_id IN
 DELETE FROM projects WHERE organization_id = 1;
 DELETE FROM organization_members WHERE organization_id = 1;
 DELETE FROM organizations WHERE id = 1;`}
-              </pre>
-            </div>
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

@@ -20,12 +20,12 @@ interface Project {
   status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived'
   start_date?: string
   target_end_date?: string
-  owner: {
+  owner?: {
     id: number
     full_name: string
     email: string
   }
-  organization: {
+  organization?: {
     id: number
     name: string
   }
@@ -65,6 +65,8 @@ export default function ProjectsPage() {
     try {
       setLoading(true)
       const response = await api.projects.list()
+      console.log('Projects API response:', response)
+      console.log('First project:', response.projects?.[0])
       setProjects(response.projects || [])
     } catch (error: any) {
       console.error('Failed to fetch projects:', error)
@@ -79,6 +81,12 @@ export default function ProjectsPage() {
   }
 
   const filteredProjects = projects.filter(project => {
+    // Skip projects that don't have required fields
+    if (!project || !project.name || !project.key) {
+      console.warn('Skipping invalid project:', project)
+      return false
+    }
+    
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          project.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          project.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -185,7 +193,7 @@ export default function ProjectsPage() {
                   <div>
                     <CardTitle className="text-xl">{project.name}</CardTitle>
                     <CardDescription className="mt-1">
-                      {project.key} • {project.organization.name}
+                      {project.key} {project.organization?.name ? `• ${project.organization.name}` : ''}
                     </CardDescription>
                   </div>
                   <Badge className={statusColors[project.status]}>
@@ -210,7 +218,7 @@ export default function ProjectsPage() {
                   
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>{project.owner.full_name || project.owner.email}</span>
+                    <span>{project.owner?.full_name || project.owner?.email || 'Unknown'}</span>
                   </div>
                 </div>
 

@@ -92,13 +92,13 @@ export default function NewProjectPage() {
     console.log('loadingOrgs:', loadingOrgs)
   }, [showCreateOrgModal, organizations, loadingOrgs])
 
-  // Ensure modal shows when no organizations exist
+  // Redirect to account page when no organizations exist
   useEffect(() => {
     if (!loadingOrgs && organizations.length === 0) {
-      console.log('No orgs detected after loading, showing modal')
-      setShowCreateOrgModal(true)
+      console.log('No organizations found, redirecting to account page')
+      router.push('/app/account')
     }
-  }, [loadingOrgs, organizations.length])
+  }, [loadingOrgs, organizations.length, router])
 
   const fetchOrganizations = async () => {
     try {
@@ -119,9 +119,8 @@ export default function NewProjectPage() {
       console.log('Valid organizations after filtering:', validOrgs)
       
       if (validOrgs.length === 0) {
-        // No organizations exist - show create organization UI
-        console.log('No valid organizations found, showing create modal')
-        setShowCreateOrgModal(true)
+        // No organizations exist - will redirect to account page
+        console.log('No valid organizations found')
         setOrganizations([])
       } else {
         console.log('Valid organizations found:', validOrgs)
@@ -197,14 +196,21 @@ export default function NewProjectPage() {
       }
 
       const response = await api.projects.create(projectData)
+      console.log('Project creation response:', response)
       
       toast({
         title: 'Success',
         description: 'Project created successfully'
       })
       
-      // Redirect to the project page
-      router.push(`/app/projects/${response.id}`)
+      // Redirect to the project page - check response structure
+      const projectId = response.project?.id || response.id
+      if (projectId) {
+        router.push(`/app/projects/${projectId}`)
+      } else {
+        console.error('No project ID in response:', response)
+        router.push('/app/projects')
+      }
     } catch (error: any) {
       console.error('Failed to create project:', error)
       toast({
@@ -255,10 +261,9 @@ export default function NewProjectPage() {
     )
   }
 
-  // Show empty state if no organizations - removed the modal check since we always show modal when no orgs
+  // The redirect effect will handle the no-organizations case
   if (!loadingOrgs && organizations.length === 0) {
-    console.log('No organizations exist - modal should be open:', showCreateOrgModal)
-    // Don't render empty state, let the modal handle it
+    return null // Component will redirect, no need to render
   }
 
   // If we're here, either loading or have organizations
@@ -271,41 +276,11 @@ export default function NewProjectPage() {
   return (
     <>
       <div className="max-w-2xl mx-auto space-y-6">
-      {/* Show fix component if organizations exist but modal isn't showing */}
-      {organizations.length > 0 && !showCreateOrgModal && (
+      {/* Show fix component ONLY in development if organizations exist but modal isn't showing */}
+      {process.env.NODE_ENV === 'development' && organizations.length > 0 && !showCreateOrgModal && (
         <FixOrgModal />
       )}
       
-      {/* Debug button - remove after testing */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="p-4 border border-dashed border-red-500 rounded mb-4">
-          <p className="text-sm text-red-600 mb-2">Debug Controls (Dev Only)</p>
-          <div className="flex gap-2">
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => setShowCreateOrgModal(true)}
-            >
-              Force Show Modal
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => {
-                setOrganizations([])
-                setShowCreateOrgModal(true)
-              }}
-            >
-              Clear Orgs & Show Modal
-            </Button>
-          </div>
-          <p className="text-xs mt-2">
-            Modal: {showCreateOrgModal ? 'OPEN' : 'CLOSED'} | 
-            Orgs: {organizations.length} | 
-            Loading: {loadingOrgs ? 'YES' : 'NO'}
-          </p>
-        </div>
-      )}
       
       <div className="flex items-center gap-4">
         <Button
@@ -393,7 +368,7 @@ export default function NewProjectPage() {
                         variant="ghost"
                         size="sm"
                         className="w-full justify-start"
-                        onClick={() => setShowCreateOrgModal(true)}
+                        onClick={() => router.push('/app/organizations/new')}
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Create New Organization

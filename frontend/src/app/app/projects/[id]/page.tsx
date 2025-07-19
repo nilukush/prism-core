@@ -18,12 +18,12 @@ interface Project {
   status: 'planning' | 'active' | 'on_hold' | 'completed' | 'archived'
   start_date?: string
   target_end_date?: string
-  owner: {
+  owner?: {
     id: number
     full_name: string
     email: string
   }
-  organization: {
+  organization?: {
     id: number
     name: string
   }
@@ -141,7 +141,7 @@ export default function ProjectDetailPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
             <p className="text-muted-foreground">
-              {project.key} • {project.organization.name}
+              {project.key} {project.organization?.name ? `• ${project.organization.name}` : ''}
             </p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function ProjectDetailPage() {
               <div className="flex items-center gap-2 text-sm">
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="text-muted-foreground">Owner:</span>
-                <span>{project.owner.full_name}</span>
+                <span>{project.owner?.full_name || 'Unknown'}</span>
               </div>
               
               {project.start_date && (

@@ -76,6 +76,11 @@ const nextConfig = {
         destination: '/auth/login',
         permanent: true,
       },
+      {
+        source: '/app/organizations',
+        destination: '/app/account?tab=organizations',
+        permanent: false, // Use temporary redirect since this is a UX consolidation
+      },
     ];
   },
   
