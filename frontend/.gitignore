@@ -37,6 +37,9 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.development
+.env
 
 # Vercel
 .vercel
@@ -91,3 +94,21 @@ Thumbs.db
 **/public/sw.js.map
 **/public/workbox-*.js.map
 **/public/worker-*.js.map
+
+# Internal documentation and debug files
+DEPLOYMENT-CHECKLIST.md
+fix-login-issue.md
+render-cli-guide.md
+debug-login.js
+**/login-fix.tsx
+**/auth-solution.md
+
+# Debug/utility pages
+**/public/clear-org-cache.html
+**/public/delete-org.html
+
+# Deployment scripts
+monitor-*.sh
+**/scripts/debug-*.sh
+**/scripts/monitor-*.sh
+start.sh

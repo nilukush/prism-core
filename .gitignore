@@ -104,6 +104,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.*
+!.env.example
+!.env.*.template
 .venv
 env/
 venv/
@@ -112,6 +115,8 @@ env.bak/
 venv.bak/
 .env.local
 .env.*.local
+*.env
+*.env.*
 
 # Spyder project settings
 .spyderproject
@@ -261,3 +266,47 @@ frontend/.env.production
 DEPLOYMENT_CHECKLIST.txt
 DEPLOYMENT_URLS.txt
 .vercel
+
+# Internal scripts and documentation
+*_internal.py
+*_internal.md
+*_internal.txt
+internal/
+check_user.py
+docker_check_user.py
+fix_login_direct.py
+
+# Activation and debug scripts
+activate_user.py
+simple_activation.py
+temp_activate.py
+activation_prod.py
+debug.py
+
+# Database scripts with potential credentials
+create_database.py
+fix_user_login.py
+database_fix.py
+
+# Production patches
+auth_production_patch.py
+
+# Test scripts that might contain credentials
+test_*.py
+!tests/test_*.py
+
+# Temporary and backup files
+*.bak
+*.backup
+*.tmp
+*.temp
+*~
+
+# Log files
+*.log
+logs/
+
+# Cache files
+.cache/
+__pycache__/
+*.pyc
