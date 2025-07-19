@@ -266,7 +266,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build container image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
           push: false
@@ -391,7 +391,7 @@ jobs:
             type=sha,prefix={{branch}}-
 
       - name: Build and push image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
           push: true
