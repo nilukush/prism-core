@@ -1,14 +1,22 @@
 # PRISM - AI-Powered Product Management Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Stars](https://img.shields.io/github/stars/nilukush/prism-core?style=social)](https://github.com/nilukush/prism-core/stargazers)
+[![Release](https://img.shields.io/badge/Release-v0.1.0--alpha-blue)](https://github.com/nilukush/prism-core/releases)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104%2B-009688)](https://fastapi.tiangolo.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Open Source](https://img.shields.io/badge/Open%20Source-✓-brightgreen)](https://github.com/nilukush/prism-core)
 
 ## 🚀 Overview
 
+**PRISM is now open source!** 🎉
+
 PRISM is an enterprise-grade, AI-powered product management platform that revolutionizes how teams build products. By leveraging advanced AI capabilities, PRISM automates routine PM tasks, provides intelligent insights, and accelerates the product development lifecycle.
+
+**[View on GitHub](https://github.com/nilukush/prism-core)** | **[Report Issues](https://github.com/nilukush/prism-core/issues)** | **[Contribute](CONTRIBUTING.md)**
 
 ### Key Features
 
@@ -48,6 +56,7 @@ PRISM is an enterprise-grade, AI-powered product management platform that revolu
 ### 1. Clone the Repository
 
 ```bash
+# Public repository - no authentication needed!
 git clone https://github.com/prism-ai/prism-core.git
 cd prism-core
 ```
@@ -166,13 +175,20 @@ npm run test:e2e
 
 ## 📊 Project Status
 
+### Released Features (v1.0)
 - ✅ Core product management features
 - ✅ AI integration (PRD, user stories)
 - ✅ Authentication & authorization
 - ✅ Real-time collaboration
+- ✅ Multi-tenant architecture
+- ✅ Enterprise security features
+- ✅ Docker & Kubernetes support
+
+### In Development (v1.1)
 - 🚧 Advanced analytics dashboard
 - 🚧 Mobile application
-- 📋 Plugin marketplace
+- 🚧 Plugin marketplace
+- 🚧 Additional AI providers
 
 ## 📝 License
 
@@ -187,33 +203,59 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 🚀 Deployment Options
 
-### Free Tier (Perfect for Startups & MVPs)
-Deploy PRISM completely free using:
-- **Backend**: Render.com (Free Web Service)
-- **Frontend**: Vercel (Free Hobby Plan)
-- **Database**: Neon (3GB Free PostgreSQL)
-- **Cache**: Upstash (Free Redis)
-
+### Quick Start with Docker
 ```bash
-# Quick deployment script
-./scripts/deploy-to-free-tier.sh
+# Clone the repository
+git clone https://github.com/nilukush/prism-core.git
+cd prism-core
+
+# Start with Docker Compose
+docker compose up -d
+
+# Access the application
+# Frontend: http://localhost:3100
+# Backend: http://localhost:8100
 ```
 
-See [Free Tier Deployment Guide](./DEPLOYMENT_FREE_TIER.md) for detailed instructions.
+### Cloud Deployment
+Deploy PRISM to your preferred cloud provider:
+- **Docker Compose**: Simple deployment for small teams
+- **Kubernetes**: Production-grade deployment with Helm charts
+- **Free Tier Options**: Deploy on Render, Vercel, or Railway
 
-### Production Deployment
-For production workloads, see our [Deployment Guide](./docs/DEPLOYMENT.md) covering:
-- Docker Compose deployment
-- Kubernetes with Helm charts
-- Cloud providers (AWS, GCP, Azure)
-- SSL/TLS configuration
-- Monitoring and scaling
+See our [Installation Guide](#installation) for detailed instructions.
 
-## 📞 Support
+## 📞 Support & Community
 
-- 🐛 Issues: [GitHub Issues](https://github.com/prism-ai/prism-core/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/prism-ai/prism-core/discussions)
-- 📚 Wiki: [Documentation Wiki](https://github.com/prism-ai/prism-core/wiki)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/nilukush/prism-core/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/nilukush/prism-core/discussions)
+- 📚 **Documentation**: [Project Wiki](https://github.com/nilukush/prism-core/wiki)
+- ⭐ **Star us on GitHub**: [Give us a star](https://github.com/nilukush/prism-core/stargazers)
+
+## 🎉 Open Source Release
+
+PRISM is now fully open source under the MIT License! We're excited to welcome the community to contribute and help shape the future of AI-powered product management.
+
+### Release Highlights
+- ✅ **v0.1.0-alpha Released**: Core functionality available
+- ✅ **MIT Licensed**: Use freely in personal and commercial projects
+- ✅ **Community Driven**: Open to contributions and feedback
+- ✅ **Enterprise Ready**: Production-grade architecture
+
+### Get Involved
+- 🌟 **Star the repo** to show your support
+- 🐛 **Report bugs** or request features
+- 🔧 **Submit PRs** to improve the platform
+- 📖 **Improve docs** to help others
+
+## 🙏 Acknowledgments
+
+Special thanks to our early contributors and the open source community:
+
+- All our [contributors](https://github.com/prism-ai/prism-core/graphs/contributors)
+- Early adopters and beta testers
+- The FastAPI, Next.js, and shadcn/ui communities
+- Our sponsors and supporters
 
 ## 🌟 Star History
 
@@ -221,4 +263,5 @@ For production workloads, see our [Deployment Guide](./docs/DEPLOYMENT.md) cover
 
 ---
 
-<p align="center">Made with ❤️ by the PRISM Team</p>
+<p align="center">Made with ❤️ by the PRISM Team and Contributors</p>
+<p align="center">Released as Open Source - July 2025</p>

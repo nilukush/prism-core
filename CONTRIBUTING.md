@@ -1,6 +1,10 @@
 # Contributing to PRISM
 
+🎉 **Welcome to the PRISM Open Source Community!** 🎉
+
 First off, thank you for considering contributing to PRISM! It's people like you that make PRISM such a great tool. We welcome contributions from everyone, regardless of their experience level.
+
+**PRISM is now open source** and we're excited to build this platform together with the community. Whether you're fixing a bug, adding a feature, improving documentation, or sharing ideas - every contribution matters!
 
 ## Table of Contents
 
@@ -31,24 +35,28 @@ Before you begin, ensure you have the following installed:
 
 1. **Fork the repository**
    
-   Click the "Fork" button in the top right corner of the [PRISM repository](https://github.com/prism-ai/prism-core).
+   Click the "Fork" button in the top right corner of the [PRISM repository](https://github.com/nilukush/prism-core).
 
 2. **Clone your fork**
    
    ```bash
    git clone https://github.com/YOUR_USERNAME/prism-core.git
    cd prism-core
-   git remote add upstream https://github.com/prism-ai/prism-core.git
+   git remote add upstream https://github.com/nilukush/prism-core.git
    ```
 
 3. **Set up the development environment**
    
    ```bash
-   # Run the setup script
-   ./scripts/setup-dev.sh
+   # Copy environment variables
+   cp .env.example .env
    
-   # Start the development environment
-   ./scripts/dev.sh up
+   # Start with Docker Compose
+   docker compose up -d
+   
+   # Or run manually:
+   # Backend: cd backend && pip install -r requirements.txt && uvicorn src.main:app --reload
+   # Frontend: cd frontend && npm install && npm run dev
    ```
 
 4. **Create a branch**

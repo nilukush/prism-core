@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Community contribution templates
+- GitHub Actions for automated testing
+- Docker Hub publishing workflow
+- Comprehensive API documentation
+
+### Changed
+- Improved error messages for better debugging
+- Enhanced mobile responsiveness
+- Optimized Docker images for faster builds
+
+### Fixed
+- Navigation placeholder pages
+- TypeScript type safety issues
+- Docker compose environment variables
+
+## [0.1.0] - 2025-01-19 - Initial Open Source Release 🎉
+
 ## [0.14.28] - 2025-01-19
 
 ### Added
