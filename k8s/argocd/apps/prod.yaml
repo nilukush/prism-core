@@ -13,7 +13,7 @@ metadata:
 spec:
   project: prism
   source:
-    repoURL: https://github.com/prism/prism-core
+    repoURL: https://github.com/nilukush/prism-core
     targetRevision: main
     path: k8s/overlays/prod
   destination:

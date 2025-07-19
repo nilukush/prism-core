@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/prism/prism-core
+    repoURL: https://github.com/nilukush/prism-core
     targetRevision: HEAD
     path: k8s/argocd/apps
   destination:
@@ -38,7 +38,7 @@ metadata:
 spec:
   description: PRISM AI Agent Platform
   sourceRepos:
-  - https://github.com/prism/prism-core
+  - https://github.com/nilukush/prism-core
   - https://charts.bitnami.com/bitnami
   - https://charts.external-secrets.io
   - https://cloudnative-pg.io/charts

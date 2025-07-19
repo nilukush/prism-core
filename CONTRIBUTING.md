@@ -31,14 +31,14 @@ Before you begin, ensure you have the following installed:
 
 1. **Fork the repository**
    
-   Click the "Fork" button in the top right corner of the [PRISM repository](https://github.com/prism/prism-core).
+   Click the "Fork" button in the top right corner of the [PRISM repository](https://github.com/nilukush/prism-core).
 
 2. **Clone your fork**
    
    ```bash
    git clone https://github.com/YOUR_USERNAME/prism-core.git
    cd prism-core
-   git remote add upstream https://github.com/prism/prism-core.git
+   git remote add upstream https://github.com/nilukush/prism-core.git
    ```
 
 3. **Set up the development environment**
@@ -61,7 +61,7 @@ Before you begin, ensure you have the following installed:
 
 ### Reporting Bugs
 
-Before creating bug reports, please check the [existing issues](https://github.com/prism/prism-core/issues) as you might find out that you don't need to create one.
+Before creating bug reports, please check the [existing issues](https://github.com/nilukush/prism-core/issues) as you might find out that you don't need to create one.
 
 **How to Submit a Good Bug Report:**
 
@@ -85,8 +85,8 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 Unsure where to begin? You can start by looking through these issues:
 
-- [Good First Issues](https://github.com/prism/prism-core/labels/good%20first%20issue) - issues which should only require a few lines of code
-- [Help Wanted](https://github.com/prism/prism-core/labels/help%20wanted) - issues which need extra attention
+- [Good First Issues](https://github.com/nilukush/prism-core/labels/good%20first%20issue) - issues which should only require a few lines of code
+- [Help Wanted](https://github.com/nilukush/prism-core/labels/help%20wanted) - issues which need extra attention
 
 ### Pull Requests
 
@@ -324,7 +324,7 @@ BREAKING CHANGE: The 'config' field now requires a 'model' property"
 ### Getting Help
 
 - **Discord**: Join our [Discord server](https://prism.io/discord)
-- **GitHub Discussions**: Ask questions in [Discussions](https://github.com/prism/prism-core/discussions)
+- **GitHub Discussions**: Ask questions in [Discussions](https://github.com/nilukush/prism-core/discussions)
 - **Stack Overflow**: Tag questions with `prism-ai`
 
 ### Weekly Meetings

@@ -20,7 +20,7 @@ The PRISM team takes security vulnerabilities seriously. We appreciate your effo
 Instead, please report them via one of the following methods:
 
 1. **Email**: security@prism.example.com
-2. **Security Advisory**: [Create a security advisory](https://github.com/prism/prism-core/security/advisories/new) on GitHub
+2. **Security Advisory**: [Create a security advisory](https://github.com/nilukush/prism-core/security/advisories/new) on GitHub
 3. **Bug Bounty Program**: https://bugbounty.prism.example.com (if applicable)
 
 ### What to Include
