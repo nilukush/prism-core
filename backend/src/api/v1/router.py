@@ -27,8 +27,9 @@ from backend.src.api.v1.documents import router as documents_router
 from backend.src.api.v1.projects import router as projects_router
 
 # Import debug router only in development
-if settings.DEBUG:
-    from backend.src.api.v1.debug import router as debug_router
+# Commented out as debug.py is gitignored and not available in production
+# if settings.DEBUG:
+#     from backend.src.api.v1.debug import router as debug_router
 
 # Import activation endpoint with proper security
 from backend.src.api.v1.activation import router as activation_router
@@ -54,8 +55,9 @@ api_v1_router.include_router(documents_router, prefix="/documents", tags=["docum
 api_v1_router.include_router(projects_router, prefix="/projects", tags=["projects"])
 
 # Include debug router only in development
-if settings.DEBUG:
-    api_v1_router.include_router(debug_router, prefix="/debug", tags=["debug"])
+# Commented out as debug.py is gitignored and not available in production
+# if settings.DEBUG:
+#     api_v1_router.include_router(debug_router, prefix="/debug", tags=["debug"])
 
 # Include activation endpoint with environment-based security
 if settings.ENVIRONMENT in ["development", "local", "staging"] or settings.DEBUG:
