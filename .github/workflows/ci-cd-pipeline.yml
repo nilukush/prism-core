@@ -290,7 +290,7 @@ jobs:
           category: 'trivy-container-${{ matrix.service }}'
 
       - name: Run Grype scan
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v6
         with:
           image: ${{ env.IMAGE_NAME }}-${{ matrix.service }}:scan
           fail-build: true
