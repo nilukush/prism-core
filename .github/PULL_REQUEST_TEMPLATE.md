@@ -1,10 +1,13 @@
 ## Description
-Brief description of what this PR does.
 
-## Related Issue
-Fixes #(issue number)
+Please include a summary of the changes and the related issue. Include relevant motivation and context.
 
-## Type of Change
+Fixes # (issue)
+
+## Type of change
+
+Please delete options that are not relevant.
+
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
@@ -12,41 +15,41 @@ Fixes #(issue number)
 - [ ] Performance improvement
 - [ ] Code refactoring
 
-## Changes Made
-- List the specific changes made in this PR
-- Be as detailed as necessary
-- Include any architectural decisions
+## How Has This Been Tested?
 
-## Testing
-- [ ] Unit tests pass locally
-- [ ] Integration tests pass locally
-- [ ] Manual testing completed
-- [ ] New tests added for new functionality
+Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce.
 
-## Test Evidence
-Provide evidence of testing (screenshots, test output, etc.)
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] End-to-end tests
+- [ ] Manual testing
 
-## Checklist
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code in hard-to-understand areas
+**Test Configuration**:
+* OS: [e.g. macOS, Ubuntu]
+* Python version: [e.g. 3.11]
+* Node version: [e.g. 20.x]
+
+## Checklist:
+
+- [ ] My code follows the style guidelines of this project
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published
+- [ ] Any dependent changes have been merged and published in downstream modules
+- [ ] I have checked my code and corrected any misspellings
+- [ ] I have updated the CHANGELOG.md with my changes (if applicable)
 
-## Migration Guide (if breaking change)
-Describe the migration steps for existing users.
+## Security Checklist
 
-## Screenshots (if applicable)
-Add screenshots to demonstrate the changes visually.
-
-## Performance Impact
-Describe any performance implications of this change.
-
-## Security Considerations
-Describe any security implications and how they were addressed.
+- [ ] I have not exposed any credentials or sensitive information
+- [ ] I have validated all user inputs
+- [ ] I have implemented proper authentication/authorization checks
+- [ ] I have considered rate limiting and DDoS protection where applicable
+- [ ] I have reviewed for potential SQL injection or XSS vulnerabilities
 
 ## Additional Notes
-Any additional information that reviewers should know.
+
+Add any additional notes, screenshots, or context about the pull request here.

@@ -1,64 +1,66 @@
-# CODEOWNERS file for PRISM
-# This file defines who is responsible for code in this repository
+# CODEOWNERS for PRISM
+# This file defines who is responsible for code in this repository.
+# These users will be automatically requested for review when someone opens a pull request.
 
 # Default owners for everything in the repo
-* @prism-core-team
-
-# Backend code owners
-/backend/ @backend-team @prism-architects
-/backend/src/api/ @api-team @backend-team
-/backend/src/models/ @database-team @backend-team
-/backend/src/services/ai/ @ai-team @ml-engineers
-/backend/src/services/auth.py @security-team @backend-team
-/backend/src/core/security.py @security-team
-/backend/src/middleware/ @security-team @backend-team
-/backend/tests/ @qa-team @backend-team
+* @nileshkumar
 
 # Frontend code owners
-/frontend/ @frontend-team @ux-team
-/frontend/src/components/ai/ @ai-team @frontend-team
-/frontend/src/lib/auth.ts @security-team @frontend-team
-/frontend/src/app/ @frontend-team
-/frontend/public/ @ux-team @frontend-team
-/frontend/tests/ @qa-team @frontend-team
+/frontend/ @nileshkumar
+/frontend/src/components/ @nileshkumar
+/frontend/src/app/ @nileshkumar
+/frontend/src/lib/ @nileshkumar
+/frontend/src/hooks/ @nileshkumar
+/frontend/src/styles/ @nileshkumar
+/frontend/public/ @nileshkumar
+
+# Backend code owners
+/backend/ @nileshkumar
+/backend/src/api/ @nileshkumar
+/backend/src/agents/ @nileshkumar
+/backend/src/core/ @nileshkumar
+/backend/src/models/ @nileshkumar
+/backend/src/services/ @nileshkumar
+/backend/src/schemas/ @nileshkumar
+/backend/migrations/ @nileshkumar
+/backend/alembic/ @nileshkumar
 
 # Infrastructure and DevOps
-/.github/ @devops-team @security-team
-/docker-compose*.yml @devops-team
-/Dockerfile @devops-team @security-team
-/k8s/ @devops-team @platform-team
-/.env.example @devops-team @security-team
+/k8s/ @nileshkumar
+/helm/ @nileshkumar
+/infrastructure/ @nileshkumar
+/docker/ @nileshkumar
+Dockerfile* @nileshkumar
+docker-compose*.yml @nileshkumar
+.github/ @nileshkumar
 
 # Documentation
-/docs/ @documentation-team @product-team
-*.md @documentation-team
-/CLAUDE.md @prism-core-team
+*.md @nileshkumar
+/docs/ @nileshkumar
+
+# Configuration files
+pyproject.toml @nileshkumar
+requirements*.txt @nileshkumar
+package.json @nileshkumar
+package-lock.json @nileshkumar
+tsconfig.json @nileshkumar
+next.config.js @nileshkumar
+tailwind.config.ts @nileshkumar
+jest.config.js @nileshkumar
+playwright.config.ts @nileshkumar
+
+# Scripts
+/scripts/ @nileshkumar
 
 # Security-sensitive files
-/backend/src/core/config.py @security-team @backend-lead
-/backend/src/services/email_service.py @security-team @backend-team
-/backend/.env* @security-team @devops-team
-/frontend/.env* @security-team @devops-team
+/backend/src/core/security.py @nileshkumar
+/backend/src/core/auth*.py @nileshkumar
+/backend/src/services/auth*.py @nileshkumar
+/backend/src/api/v1/auth*.py @nileshkumar
+/frontend/src/lib/auth*.ts @nileshkumar
+.env* @nileshkumar
 
-# Database migrations
-/backend/migrations/ @database-team @backend-lead
-
-# AI/ML related files
-/backend/src/services/ai/ @ai-team @ml-engineers
-/backend/src/models/agent.py @ai-team @backend-team
-/AI_*.md @ai-team @product-team
-
-# Legal and compliance
-/LICENSE @legal-team
-/SECURITY.md @security-team @legal-team
-/PRIVACY.md @legal-team @product-team
-
-# CI/CD pipelines
-/.github/workflows/ @devops-team @security-team
-/.github/workflows/security-*.yml @security-team
-/.github/workflows/release.yml @release-team @devops-team
-
-# Critical configuration files require multiple reviews
-/backend/src/core/config.py @security-team @backend-lead @cto
-/backend/pyproject.toml @backend-lead @security-team
-/frontend/package.json @frontend-lead @security-team
+# CI/CD
+.github/workflows/ @nileshkumar
+render.yaml @nileshkumar
+vercel.json @nileshkumar

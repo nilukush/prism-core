@@ -1,44 +1,39 @@
 ---
 name: Bug report
-about: Create a report to help us improve PRISM
+about: Create a report to help us improve
 title: '[BUG] '
-labels: 'bug, needs-triage'
+labels: 'bug, triage'
 assignees: ''
+
 ---
 
-## Bug Description
+**Describe the bug**
 A clear and concise description of what the bug is.
 
-## To Reproduce
+**To Reproduce**
 Steps to reproduce the behavior:
 1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
+2. Click on '....'
+3. Scroll down to '....'
 4. See error
 
-## Expected Behavior
+**Expected behavior**
 A clear and concise description of what you expected to happen.
 
-## Actual Behavior
-What actually happened instead.
-
-## Screenshots
+**Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-## Environment
- - PRISM Version: [e.g., 1.0.3]
- - Deployment: [e.g., Docker, Kubernetes, Bare Metal]
- - OS: [e.g., Ubuntu 22.04]
- - Python Version: [e.g., 3.11.5]
- - Browser (if applicable): [e.g., Chrome 120]
+**Environment (please complete the following information):**
+ - OS: [e.g. macOS, Ubuntu]
+ - Browser: [e.g. chrome, safari]
+ - Version: [e.g. 22]
+ - Node version: [e.g. 20.x]
+ - Python version: [e.g. 3.11]
 
-## Logs
-```
-Paste relevant logs here
-```
-
-## Additional Context
+**Additional context**
 Add any other context about the problem here.
 
-## Possible Solution
-If you have suggestions on how to fix the bug, please describe them here.
+**Logs**
+```
+Please paste any relevant log output here
+```

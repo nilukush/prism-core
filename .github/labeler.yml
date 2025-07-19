@@ -1,0 +1,116 @@
+# Add 'frontend' label to any change within the 'frontend' folder
+frontend:
+  - changed-files:
+    - any-glob-to-any-file:
+      - frontend/**/*
+      - '*.jsx'
+      - '*.tsx'
+      - '*.js'
+      - '*.ts'
+
+# Add 'backend' label to any change within the 'backend' folder
+backend:
+  - changed-files:
+    - any-glob-to-any-file:
+      - backend/**/*
+      - '*.py'
+      - requirements*.txt
+      - pyproject.toml
+
+# Add 'documentation' label to any change to .md files
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*.md'
+      - docs/**/*
+
+# Add 'docker' label to any change to Dockerfile or docker-compose files
+docker:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/Dockerfile*'
+      - '**/docker-compose*.yml'
+      - docker/**/*
+
+# Add 'kubernetes' label to any change to k8s files
+kubernetes:
+  - changed-files:
+    - any-glob-to-any-file:
+      - k8s/**/*
+      - helm/**/*
+      - '*.yaml'
+      - '*.yml'
+
+# Add 'github-actions' label to any change to .github files
+github-actions:
+  - changed-files:
+    - any-glob-to-any-file:
+      - .github/**/*
+
+# Add 'dependencies' label when dependencies are updated
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - package*.json
+      - requirements*.txt
+      - pyproject.toml
+      - poetry.lock
+      - Pipfile*
+
+# Add 'tests' label when test files are modified
+tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '**/*test*'
+      - '**/*spec*'
+      - tests/**/*
+      - frontend/__tests__/**/*
+      - backend/tests/**/*
+
+# Add 'api' label when API files are modified
+api:
+  - changed-files:
+    - any-glob-to-any-file:
+      - backend/src/api/**/*
+      - frontend/src/lib/api*.ts
+      - frontend/src/app/api/**/*
+
+# Add 'database' label when database-related files are modified
+database:
+  - changed-files:
+    - any-glob-to-any-file:
+      - backend/src/models/**/*
+      - backend/migrations/**/*
+      - backend/alembic/**/*
+      - '**/*migration*'
+      - docker/postgres/**/*
+
+# Add 'security' label when security-related files are modified
+security:
+  - changed-files:
+    - any-glob-to-any-file:
+      - backend/src/core/security.py
+      - backend/src/core/auth*.py
+      - backend/src/services/auth*.py
+      - backend/src/api/v1/auth*.py
+      - frontend/src/lib/auth*.ts
+      - '**/middleware/**/*auth*'
+      - .github/workflows/codeql.yml
+      - .github/workflows/dependency-review.yml
+
+# Add 'ui' label when UI components are modified
+ui:
+  - changed-files:
+    - any-glob-to-any-file:
+      - frontend/src/components/**/*
+      - frontend/src/styles/**/*
+      - '**/*.css'
+      - '**/*.scss'
+
+# Add 'ai' label when AI-related files are modified
+ai:
+  - changed-files:
+    - any-glob-to-any-file:
+      - backend/src/agents/**/*
+      - backend/src/services/ai/**/*
+      - frontend/src/components/ai/**/*

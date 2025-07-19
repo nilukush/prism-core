@@ -1,0 +1,76 @@
+name: Manual Database Backup
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to backup'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      backup_type:
+        description: 'Type of backup'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - incremental
+
+jobs:
+  backup:
+    name: Database Backup
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'latest'
+    
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+    
+    - name: Create backup
+      run: |
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        NAMESPACE=prism-${{ github.event.inputs.environment }}
+        POD=$(kubectl get pod -n $NAMESPACE -l app=postgres -o jsonpath="{.items[0].metadata.name}")
+        
+        echo "Creating ${{ github.event.inputs.backup_type }} backup for ${{ github.event.inputs.environment }}"
+        
+        kubectl exec -n $NAMESPACE $POD -- pg_dump -U prism -d prism -Fc > backup_${TIMESTAMP}.dump
+        
+        echo "Backup completed: backup_${TIMESTAMP}.dump"
+    
+    - name: Upload backup to S3
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: us-east-1
+      run: |
+        TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+        aws s3 cp backup_${TIMESTAMP}.dump s3://${{ secrets.BACKUP_BUCKET }}/database/${{ github.event.inputs.environment }}/${TIMESTAMP}/
+        
+        echo "Backup uploaded to S3"
+    
+    - name: Notify Slack
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          Manual backup for ${{ github.event.inputs.environment }} ${{ job.status }}
+          Type: ${{ github.event.inputs.backup_type }}
+          Initiated by: ${{ github.actor }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
