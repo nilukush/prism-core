@@ -48,7 +48,7 @@ PRISM is an enterprise-grade, AI-powered product management platform that revolu
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/nilukush/prism-core.git
+git clone https://github.com/prism-ai/prism-core.git
 cd prism-core
 ```
 
@@ -85,7 +85,7 @@ npm run dev
 
 For development purposes, a test account is created:
 ```
-Email: admin@example.com
+Email: demo@prism-ai.dev
 Password: Admin123!@#
 ```
 
@@ -211,13 +211,13 @@ For production workloads, see our [Deployment Guide](./docs/DEPLOYMENT.md) cover
 
 ## 📞 Support
 
-- 🐛 Issues: [GitHub Issues](https://github.com/nilukush/prism-core/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/nilukush/prism-core/discussions)
-- 📚 Wiki: [Documentation Wiki](https://github.com/nilukush/prism-core/wiki)
+- 🐛 Issues: [GitHub Issues](https://github.com/prism-ai/prism-core/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/prism-ai/prism-core/discussions)
+- 📚 Wiki: [Documentation Wiki](https://github.com/prism-ai/prism-core/wiki)
 
 ## 🌟 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=nilukush/prism-core&type=Date)](https://star-history.com/#nilukush/prism-core&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=prism-ai/prism-core&type=Date)](https://star-history.com/#prism-ai/prism-core&Date)
 
 ---
 

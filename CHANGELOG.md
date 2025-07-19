@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed 28 sensitive files (environment files, debug scripts, internal docs)
   - Enhanced .gitignore to prevent committing sensitive files
   - Updated .env.example with security warnings
-  - Standardized all repository URLs to github.com/nilukush/prism-core
+  - Standardized all repository URLs to github.com/prism-ai/prism-core
 
 ### Fixed
 - Critical SSRF vulnerability in Next.js (updated 14.1.0 → 14.2.30)
@@ -233,13 +233,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Quick start guide
   - Deployment guides
 
-[Unreleased]: https://github.com/nilukush/prism-core/compare/v0.14.28...HEAD
-[0.14.28]: https://github.com/nilukush/prism-core/compare/v0.14.27...v0.14.28
-[0.14.27]: https://github.com/nilukush/prism-core/compare/v0.14.26...v0.14.27
-[0.14.26]: https://github.com/nilukush/prism-core/compare/v0.14.25...v0.14.26
-[0.14.25]: https://github.com/nilukush/prism-core/compare/v0.14.24...v0.14.25
-[0.14.24]: https://github.com/nilukush/prism-core/compare/v0.14.23...v0.14.24
-[0.14.23]: https://github.com/nilukush/prism-core/compare/v0.14.22...v0.14.23
-[0.14.22]: https://github.com/nilukush/prism-core/compare/v0.14.21...v0.14.22
-[0.14.21]: https://github.com/nilukush/prism-core/compare/v0.14.20...v0.14.21
-[1.0.0]: https://github.com/nilukush/prism-core/releases/tag/v1.0.0
+[Unreleased]: https://github.com/prism-ai/prism-core/compare/v0.14.28...HEAD
+[0.14.28]: https://github.com/prism-ai/prism-core/compare/v0.14.27...v0.14.28
+[0.14.27]: https://github.com/prism-ai/prism-core/compare/v0.14.26...v0.14.27
+[0.14.26]: https://github.com/prism-ai/prism-core/compare/v0.14.25...v0.14.26
+[0.14.25]: https://github.com/prism-ai/prism-core/compare/v0.14.24...v0.14.25
+[0.14.24]: https://github.com/prism-ai/prism-core/compare/v0.14.23...v0.14.24
+[0.14.23]: https://github.com/prism-ai/prism-core/compare/v0.14.22...v0.14.23
+[0.14.22]: https://github.com/prism-ai/prism-core/compare/v0.14.21...v0.14.22
+[0.14.21]: https://github.com/prism-ai/prism-core/compare/v0.14.20...v0.14.21
+[1.0.0]: https://github.com/prism-ai/prism-core/releases/tag/v1.0.0

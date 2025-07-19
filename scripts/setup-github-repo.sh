@@ -6,7 +6,7 @@
 echo "🚀 Setting up GitHub repository for open source release..."
 
 # Repository details
-REPO="nilukush/prism-core"
+REPO="prism-ai/prism-core"
 
 # Enable issues
 echo "✅ Enabling Issues..."
@@ -66,12 +66,12 @@ echo "✅ Creating welcome discussion..."
 gh discussion create --repo $REPO --category "General" --title "Welcome to PRISM! 👋" --body "Welcome to the PRISM community! This is the place to discuss ideas, share feedback, and connect with other users and contributors.
 
 ## Getting Started
-- Read our [README](https://github.com/nilukush/prism-core#readme)
-- Check out the [Contributing Guide](https://github.com/nilukush/prism-core/blob/main/CONTRIBUTING.md)
-- Report bugs in [Issues](https://github.com/nilukush/prism-core/issues)
+- Read our [README](https://github.com/prism-ai/prism-core#readme)
+- Check out the [Contributing Guide](https://github.com/prism-ai/prism-core/blob/main/CONTRIBUTING.md)
+- Report bugs in [Issues](https://github.com/prism-ai/prism-core/issues)
 
 ## Community Guidelines
-Please be respectful and follow our [Code of Conduct](https://github.com/nilukush/prism-core/blob/main/CODE_OF_CONDUCT.md).
+Please be respectful and follow our [Code of Conduct](https://github.com/prism-ai/prism-core/blob/main/CODE_OF_CONDUCT.md).
 
 Looking forward to building something amazing together! 🚀"
 

@@ -8,7 +8,7 @@ metadata:
 spec:
   project: prism
   source:
-    repoURL: https://github.com/nilukush/prism-core
+    repoURL: https://github.com/prism-ai/prism-core
     targetRevision: staging
     path: k8s/overlays/staging
   destination:

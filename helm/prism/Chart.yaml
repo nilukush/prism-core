@@ -9,13 +9,13 @@ keywords:
   - agents
   - platform
   - orchestration
-home: https://github.com/nilukush/prism-core
+home: https://github.com/prism-ai/prism-core
 sources:
-  - https://github.com/nilukush/prism-core
+  - https://github.com/prism-ai/prism-core
 maintainers:
   - name: PRISM Team
     email: team@prism.io
-icon: https://raw.githubusercontent.com/nilukush/prism-core/main/logo.png
+icon: https://raw.githubusercontent.com/prism-ai/prism-core/main/logo.png
 annotations:
   artifacthub.io/changes: |
     - kind: added

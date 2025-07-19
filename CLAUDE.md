@@ -201,7 +201,7 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
     - ✅ Live at: https://prism-frontend-kappa.vercel.app
     - ✅ Deployment protection DISABLED - publicly accessible
     - ✅ Project renamed from `frontend` to `prism-app`
-    - ✅ Alternative URL: https://prism-9z5biinym-nilukushs-projects.vercel.app
+    - ✅ Alternative URL: https://prism-app-yourproject.vercel.app
   - **Database (Neon)**: PostgreSQL database in production
   - **Cache (Upstash)**: Redis cache in production
   - **CORS Configuration**:
@@ -218,7 +218,7 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
     - ✅ Fixed Organization model fields (removed max_workspaces)
     - ✅ Complete flow: Register → Login → Create Org → Create Project
     - 🔧 **Required Environment Variables** (all set in Render):
-      - `CORS_ORIGINS=https://prism-frontend-kappa.vercel.app,https://prism-9z5biinym-nilukushs-projects.vercel.app`
+      - `CORS_ORIGINS=https://prism-frontend-kappa.vercel.app,https://prism-app-yourproject.vercel.app`
       - `AUTO_ACTIVATE_USERS=true`
       - `EMAIL_VERIFICATION_REQUIRED=false`
       - `SKIP_EMAIL_VERIFICATION=true`
@@ -353,7 +353,7 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
   - **Database Setup**:
     1. Created `setup-test-org.sql` script
     2. Established default "Personal Organization" for testing
-    3. Linked test user (nilukush@gmail.com) as owner
+    3. Linked test user (admin@example.com) as owner
   - **Result**: Complete organization-project workflow now functional
 - **Implemented Project Management Features** 📁:
   - **Created Missing Pages**:
@@ -379,7 +379,7 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
   - **Result**: Complete authentication flow now working end-to-end
 - **Fixed Password Mismatch** 🔐:
   - **Root Cause**: Password hash in database didn't match any known passwords
-  - **Problem**: Neither `Test123!@#` nor `n1i6Lu!8` validated against stored hash
+  - **Problem**: Password hash in database didn't match the test password
   - **Solution Applied**: Updated password hash in database for Test123!@#
   - **Enterprise Debug Tools Created**:
     1. Created `/api/debug-auth` endpoint for comprehensive auth testing
@@ -414,14 +414,14 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
   - Tables now created successfully on backend startup
   - No more 500 errors on authentication endpoints
 - **Working Credentials**:
-  - Email: `nilukush@gmail.com`
+  - Email: `admin@example.com`
   - Password: `Test123!@#`
 - Previous fixes from v0.12.0, v0.11.0, v0.10.0, v0.9.0, v0.8.9, v0.8.8, v0.8.7, v0.8.6, v0.8.5, v0.8.4, v0.8.3, v0.8.2, v0.8.1, v0.8.0 and v0.7.1 included
 
 ## Current Repository Status
 
 **Open Source Release**: v0.14.26 (January 19, 2025)
-- Repository: https://github.com/nilukush/prism-core
+- Repository: https://github.com/prism-ai/prism-core
 - License: MIT
 - Status: Public, actively maintained
 - Documentation: Comprehensive and professional
@@ -917,7 +917,7 @@ After fixing the middleware issues, authentication is now fully functional:
 - Made OAuth providers optional in auth configuration to avoid errors when credentials aren't configured
 
 #### 3. Authentication Login Failures
-**Issue**: User unable to login with previously working credentials (nilukush@gmail.com)
+**Issue**: User unable to login with previously working credentials (admin@example.com)
 - Frontend showed "Invalid email or password" error
 - Backend was returning 500 errors
 
@@ -1105,8 +1105,8 @@ open http://localhost:3100
 ```
 
 ### Default Test Account
-- Email: nilukush@gmail.com
-- Password: n1i6Lu!8
+- Email: admin@example.com
+- Password: Test123!@#
 
 ### Common Commands
 ```bash
@@ -1151,7 +1151,7 @@ curl -X POST http://localhost:8100/api/v1/auth/login \
 # Test with existing user
 curl -X POST http://localhost:8100/api/v1/auth/login \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=nilukush@gmail.com&password=n1i6Lu!8"
+  -d "username=admin@example.com&password=Test123!@#"
 ```
 
 ### Manual User Activation (Development Only)
@@ -1504,7 +1504,7 @@ Comprehensive roadmap including:
   ```bash
   curl -X POST http://localhost:8100/api/v1/auth/login \
     -H "Content-Type: application/x-www-form-urlencoded" \
-    -d "username=nilukush@gmail.com&password=Test123!@#&grant_type=password"
+    -d "username=admin@example.com&password=Test123!@#&grant_type=password"
   ```
 
 ### Backend Startup Failures
@@ -1829,7 +1829,7 @@ docker compose logs postgres --tail 50
 - **Frontend**: Running successfully with all UI components properly resolved
 - **Authentication**: OAuth2 password flow with JWT tokens - **FULLY WORKING!** ✅
   - Login endpoint: `POST /api/v1/auth/login`
-  - Working credentials: `nilukush@gmail.com` / `Test123!@#`
+  - Working credentials: `admin@example.com` / `Test123!@#`
   - Returns valid JWT access and refresh tokens
   - Enum mismatch issue completely resolved
 - **Token Refresh**: Automatic token refresh mechanism with proper rotation
@@ -1852,7 +1852,7 @@ docker compose logs postgres --tail 50
 
 ### 🔧 Testing the Complete Workflow
 1. Visit http://localhost:3100 (or your configured port)
-2. Login with credentials (nilukush@gmail.com / Test123!@#)
+2. Login with credentials (admin@example.com / Test123!@#)
 3. Click "Generate PRD" from the AI Quick Actions on the dashboard
 4. Fill in the product information form
 5. Click "Generate PRD" to see the AI-generated document
