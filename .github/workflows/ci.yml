@@ -94,7 +94,7 @@ jobs:
         pytest tests/ -v --cov=src --cov-report=xml --cov-report=html
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./backend/coverage.xml
@@ -146,7 +146,7 @@ jobs:
         NEXT_PUBLIC_API_URL: http://localhost:8000
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./frontend/coverage/lcov.info
