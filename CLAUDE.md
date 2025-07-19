@@ -80,8 +80,36 @@ docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
 - **Unexpected AI API costs**: Health checks were calling AI APIs - fixed in v0.14.6
 - **Client-side exception after project creation**: TypeError on undefined 'name' - fixed in v0.14.27
 - **Missing navigation routes (404s)**: Created placeholder pages for sprints, backlog, teams, settings
+- **Render deployment fails**: Debug/activation modules in .gitignore - fixed in v0.14.28
 
-### 📊 Latest Version: 0.14.27 (2025-01-19)
+### 📊 Latest Version: 0.14.28 (2025-01-19)
+- **🚀 Open Source Release Preparation**:
+  - **Security Cleanup**:
+    - Removed 28 sensitive files (env files, debug scripts, internal docs)
+    - Enhanced .gitignore to prevent accidental commits
+    - Updated .env.example with security warnings
+  - **GitHub Configuration**:
+    - Added professional issue templates (bug, feature, docs, security)
+    - Created comprehensive PR template with checklists
+    - Configured GitHub Actions workflows (CI/CD, security scanning)
+    - Set up Dependabot for automated dependency updates
+    - Added CODEOWNERS for review assignments
+  - **Security Fixes**:
+    - Fixed critical SSRF vulnerability in Next.js (14.1.0 → 14.2.30)
+    - Fixed high ReDoS vulnerability in jsPDF (2.5.1 → 3.0.1)
+    - Reduced vulnerabilities from 37 to 23
+  - **Documentation**:
+    - Created TODO_TRACKER.md for open source contributors
+    - Added OPEN_SOURCE_READY.md checklist
+    - Created ANNOUNCEMENT_TEMPLATE.md for release promotion
+  - **First Release**: Tagged v0.1.0 (alpha) with comprehensive release notes
+- **🔧 Fixed Render Deployment Failure**:
+  - **Error**: ModuleNotFoundError for debug.py and simple_activation.py
+  - **Cause**: Files were gitignored but imported in production router
+  - **Solution**: Commented out debug and activation imports in router.py
+  - **Result**: Backend successfully deployed at https://prism-backend-bwfx.onrender.com
+
+### 📊 Previous Version: 0.14.27 (2025-01-19)
 - **🐛 Fixed Client-Side Exception After Project Creation**:
   - **Error**: "Cannot read properties of undefined (reading 'name')" after successful project creation
   - **Root Causes**:

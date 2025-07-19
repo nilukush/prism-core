@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.28] - 2025-01-19
+
+### Added
+- Comprehensive GitHub configuration for open source release:
+  - Professional issue templates (bug report, feature request, documentation, security, question)
+  - Pull request template with security and testing checklists
+  - GitHub Actions workflows for CI/CD, security scanning, and automation
+  - Dependabot configuration for automated dependency updates
+  - CODEOWNERS file for automatic review assignments
+  - Auto-labeler configuration
+- Release documentation:
+  - TODO_TRACKER.md listing remaining implementation tasks
+  - OPEN_SOURCE_READY.md with release checklist
+  - ANNOUNCEMENT_TEMPLATE.md with platform-specific templates
+  - RELEASE_NOTES_v0.1.0.md for first public release
+- GitHub repository setup script (scripts/setup-github-repo.sh)
+
+### Changed
+- Prepared repository for public open source release:
+  - Removed 28 sensitive files (environment files, debug scripts, internal docs)
+  - Enhanced .gitignore to prevent committing sensitive files
+  - Updated .env.example with security warnings
+  - Standardized all repository URLs to github.com/nilukush/prism-core
+
+### Fixed
+- Critical SSRF vulnerability in Next.js (updated 14.1.0 → 14.2.30)
+- High severity ReDoS vulnerability in jsPDF (updated 2.5.1 → 3.0.1)
+- Render deployment failure due to gitignored debug modules:
+  - Commented out imports for debug.py and simple_activation.py in router
+  - Backend now successfully deploys to production
+
+### Security
+- Reduced total vulnerabilities from 37 to 23
+- Fixed all critical vulnerabilities
+- Created requirements-security-update.txt for Python security updates
+- Removed all hardcoded credentials and sensitive information
+
+### Tagged
+- Released v0.1.0 (alpha) - First public open source release
+
 ## [0.14.27] - 2025-01-19
 
 ### Fixed
@@ -193,7 +233,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Quick start guide
   - Deployment guides
 
-[Unreleased]: https://github.com/nilukush/prism-core/compare/v0.14.27...HEAD
+[Unreleased]: https://github.com/nilukush/prism-core/compare/v0.14.28...HEAD
+[0.14.28]: https://github.com/nilukush/prism-core/compare/v0.14.27...v0.14.28
 [0.14.27]: https://github.com/nilukush/prism-core/compare/v0.14.26...v0.14.27
 [0.14.26]: https://github.com/nilukush/prism-core/compare/v0.14.25...v0.14.26
 [0.14.25]: https://github.com/nilukush/prism-core/compare/v0.14.24...v0.14.25
