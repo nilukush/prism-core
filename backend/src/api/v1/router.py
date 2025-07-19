@@ -34,7 +34,8 @@ from backend.src.api.v1.projects import router as projects_router
 # Import activation endpoint with proper security
 from backend.src.api.v1.activation import router as activation_router
 # Simple activation for production issues
-from backend.src.api.v1.simple_activation import router as simple_activation_router
+# Commented out as simple_activation.py is gitignored and not available in production
+# from backend.src.api.v1.simple_activation import router as simple_activation_router
 
 # Create v1 API router
 api_v1_router = APIRouter()
@@ -67,6 +68,7 @@ else:
     api_v1_router.include_router(activation_router, prefix="/activation", tags=["activation"])
 
 # Always include simple activation endpoint
-api_v1_router.include_router(simple_activation_router, prefix="/activation", tags=["activation"])
+# Commented out as simple_activation.py is gitignored and not available in production
+# api_v1_router.include_router(simple_activation_router, prefix="/activation", tags=["activation"])
 
 __all__ = ["api_v1_router"]
